@@ -1,7 +1,7 @@
 /// <reference path="../lib/phaser.d.ts" />
 import { Play } from './scenes/Play.ts';
 
-const config = {
+const config: Phaser.Types.Core.GameConfig = {
     parent: 'gameView',
     type: Phaser.AUTO,
     width: 800,
