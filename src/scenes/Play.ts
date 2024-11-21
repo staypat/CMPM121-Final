@@ -95,9 +95,29 @@ class Grid {
             for (let col = 0; col < this.cols; col++) {
                 const x = col * this.cellSize + this.cellSize / 2;
                 const y = row * this.cellSize + this.cellSize / 2;
-                const cell = this.scene.add.rectangle(x, y, this.cellSize, this.cellSize, 0x00ff00);
-                cell.setStrokeStyle(1, 0x0000ff);
+                const cell = this.scene.add.rectangle(x, y, this.cellSize, this.cellSize, 0x00ff00)
+                    .setStrokeStyle(1, 0x0000ff)
+                    .setInteractive();
+
+                // Handle cell click
+                cell.on('pointerdown', () => {
+                    this.onCellClick(row, col);
+                });
             }
         }
+    }
+
+    private onCellClick(row: number, col: number) {
+        // Check adjacency with the player
+        const isAdjacent = this.isAdjacent(row, col);
+        console.log(`Cell is adjacent: ${isAdjacent}`);
+    }
+
+    private isAdjacent(row: number, col: number): boolean {
+        const dRow = Math.abs(row - characterPosition.row);
+        const dCol = Math.abs(col - characterPosition.col);
+
+        // A cell is adjacent if it's directly next to the player or diagonal
+        return (dRow === 1 && dCol === 0) || (dRow === 0 && dCol === 1) || (dRow === 1 && dCol === 1);
     }
 }
