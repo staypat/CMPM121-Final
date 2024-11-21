@@ -1,4 +1,5 @@
 /// <reference path="../lib/phaser.d.ts" />
+import { Play } from './scenes/Play.ts';
 
 const config = {
     parent: 'gameView',
