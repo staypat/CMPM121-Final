@@ -241,8 +241,16 @@ class Grid {
                     .setInteractive();
 
                 rowVisuals.push(cell);
+
+                this.cellVisuals.push(rowVisuals);
+                // Handle cell click
+                cell.on('pointerdown', () => {
+                    this.onCellClick(row, col);
+                });
+
             }
-            this.cellVisuals.push(rowVisuals);
+
+
         }
     }
 
@@ -261,5 +269,17 @@ class Grid {
                 };
             }
         }
+    }
+
+    private onCellClick(row: number, col: number) {
+        // Check adjacency with the player
+        const isAdjacent = this.isAdjacent(row, col);
+        console.log(`Cell is adjacent: ${isAdjacent}`);
+    }
+    private isAdjacent(row: number, col: number): boolean {
+        const dRow = Math.abs(row - characterPosition.row);
+        const dCol = Math.abs(col - characterPosition.col);
+        // A cell is adjacent if it's directly next to the player or diagonal
+        return (dRow === 1 && dCol === 0) || (dRow === 0 && dCol === 1) || (dRow === 1 && dCol === 1)  || (dRow === 0 && dCol === 0);
     }
 }
