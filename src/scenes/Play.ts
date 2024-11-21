@@ -118,6 +118,6 @@ class Grid {
         const dCol = Math.abs(col - characterPosition.col);
 
         // A cell is adjacent if it's directly next to the player or diagonal
-        return (dRow === 1 && dCol === 0) || (dRow === 0 && dCol === 1) || (dRow === 1 && dCol === 1);
+        return (dRow === 1 && dCol === 0) || (dRow === 0 && dCol === 1) || (dRow === 1 && dCol === 1) || (dRow === 0 && dCol === 0);
     }
 }
