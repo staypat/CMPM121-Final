@@ -9,4 +9,4 @@ const config: Phaser.Types.Core.GameConfig = {
     scene: [Play]
 }
 
-const game = new Phaser.Game(config);
+const _game = new Phaser.Game(config);
