@@ -18,8 +18,6 @@ const characterPosition = { row: 0, col: 0 };
 
 // Player movement controls
 let cursors: Phaser.Types.Input.Keyboard.CursorKeys;
-let collectWaterKey: Phaser.Input.Keyboard.Key; // Declare W key for collecting water
-let collectSunKey: Phaser.Input.Keyboard.Key; // Declare S key for collecting sun
 const MOVE_COOLDOWN = 250; // Cooldown between moves, in milliseconds
 let lastMoveTime = 0;
 
@@ -29,13 +27,7 @@ let turnCounter = 0;
 
 // Popup text and other UI
 let popupText: Phaser.GameObjects.Text | null = null; // Popup info for the current cell
-let currentWaterText: Phaser.GameObjects.Text; // Tracks the player's collected water
-let currentSunText: Phaser.GameObjects.Text; // Tracks the player's collected sun
 let activeCell: { sun: number; water: number; plantType: string; growthLevel: string } | null = null; // Current cell the player is standing on
-
-// Player inventory
-let playerWater = 0;
-let playerSun = 0;
 
 // Main Play scene
 export class Play extends Phaser.Scene {
@@ -58,17 +50,15 @@ export class Play extends Phaser.Scene {
 
         // Set up keyboard controls
         cursors = this.input.keyboard!.createCursorKeys();
-        collectWaterKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.W); // W key to collect water
-        collectSunKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.S); // S key to collect sun
 
-        // Create "Next Turn" button UI
+        // Create the "Next Turn" button UI
         const gridHeight = NUM_ROWS * CELL_SIZE;
         const totalGameHeight = this.scale.height;
         const blackHeight = totalGameHeight - gridHeight;
         const centerX = this.scale.width / 2;
         const centerY = gridHeight + blackHeight / 2;
 
-        // Add the "Next Turn" button at the center
+        // Add the "Next Turn" button
         _nextTurnButton = this.add.text(centerX, centerY, "Next Turn", {
             font: "20px Arial",
             backgroundColor: "#0000ff",
@@ -77,30 +67,6 @@ export class Play extends Phaser.Scene {
             .setOrigin(0.5, 0.5)
             .setInteractive()
             .on("pointerdown", () => this.nextTurn());
-
-        // Add player's sun counter to the right of the button
-        currentSunText = this.add.text(
-            centerX + 150, // Position to the right of the button with spacing
-            centerY - 20,  // Slightly above water (stacked vertically)
-            `Sun Collected: ${playerSun}`,
-            {
-                font: "20px Arial",
-                color: "#ffffff",
-                backgroundColor: "#000000",
-            }
-        ).setOrigin(0, 0.5); // Left-align relative to the sun counter
-
-        // Add player's water counter below the sun counter
-        currentWaterText = this.add.text(
-            centerX + 150, // Same X position as the sun counter
-            centerY + 20,  // Below the sun counter
-            `Water Collected: ${playerWater}`,
-            {
-                font: "20px Arial",
-                color: "#ffffff",
-                backgroundColor: "#000000",
-            }
-        ).setOrigin(0, 0.5); // Left-align relative to the water counter
     }
 
     override update(time: number) {
@@ -127,28 +93,13 @@ export class Play extends Phaser.Scene {
 
         // Update the popup text (even when standing still)
         this.updatePopup();
-
-        // Handle water collection if W is pressed
-        if (Phaser.Input.Keyboard.JustDown(collectWaterKey)) {
-            this.collectWater();
-        }
-
-        // Handle sun collection if S is pressed
-        if (Phaser.Input.Keyboard.JustDown(collectSunKey)) {
-            this.collectSun();
-        }
     }
 
     private updatePopup() {
         // Get the current cell based on the player's position
         const currentCell = this.grid.getCellData(characterPosition.row, characterPosition.col);
 
-        // If the player moves to a different cell, reset the sun in the previous cell
-        if (activeCell && activeCell !== currentCell) {
-            activeCell.sun = 0; // Reset the sun to 0 when the player exits the cell
-        }
-
-        // If the player moves to a new cell, update the activeCell and popup
+        // If the player moves to a different cell, update the activeCell and popup
         if (activeCell !== currentCell) {
             activeCell = currentCell;
 
@@ -158,51 +109,13 @@ export class Play extends Phaser.Scene {
             popupText = this.add.text(
                 character.x + CELL_SIZE / 2,
                 character.y - CELL_SIZE / 2,
-                `Sun: ${currentCell.sun}, Water: ${currentCell.water}\nPlant: ${currentCell.plantType}, Growth: ${currentCell.growthLevel}\nPress W to collect water\nPress S to collect sun`,
+                `Sun: ${currentCell.sun}, Water: ${currentCell.water}\nPlant: ${currentCell.plantType}, Growth: ${currentCell.growthLevel}`,
                 {
                     font: "16px Arial",
                     color: "#ffffff",
                     backgroundColor: "#000000",
                 }
             );
-        }
-    }
-
-    private collectWater() {
-        // Ensure the player is standing on a valid cell and it has water
-        if (activeCell && activeCell.water > 0) {
-            // Add water to the player's inventory
-            playerWater += activeCell.water;
-
-            // Deplete water in the current cell
-            activeCell.water = 0;
-
-            // Refresh the popup text and water counter
-            if (popupText) {
-                popupText.setText(`Sun: ${activeCell.sun}, Water: ${activeCell.water}\nPlant: ${activeCell.plantType}, Growth: ${activeCell.growthLevel}\nPress W to collect water\nPress S to collect sun`);
-            }
-            currentWaterText.setText(`Water Collected: ${playerWater}`);
-        } else {
-            console.log("No water available to collect in this cell.");
-        }
-    }
-
-    private collectSun() {
-        // Ensure the player is standing on a valid cell and it has sun
-        if (activeCell && activeCell.sun > 0) {
-            // Add sun to the player's inventory
-            playerSun += activeCell.sun;
-
-            // Deplete sun in the current cell
-            activeCell.sun = 0;
-
-            // Refresh the popup text and sun counter
-            if (popupText) {
-                popupText.setText(`Sun: ${activeCell.sun}, Water: ${activeCell.water}\nPlant: ${activeCell.plantType}, Growth: ${activeCell.growthLevel}\nPress W to collect water\nPress S to collect sun`);
-            }
-            currentSunText.setText(`Sun Collected: ${playerSun}`);
-        } else {
-            console.log("No sun available to collect in this cell.");
         }
     }
 
@@ -254,7 +167,13 @@ class Grid {
                     .setStrokeStyle(1, 0x0000ff)
                     .setInteractive();
 
-                    const plant = this.scene.add.rectangle(x, y, this.cellSize / 2, this.cellSize / 2, GROWTH_COLORS[this.cellData[row][col].growthLevel as keyof typeof GROWTH_COLORS]);
+                const plant = this.scene.add.rectangle(
+                    x,
+                    y,
+                    this.cellSize / 2,
+                    this.cellSize / 2,
+                    GROWTH_COLORS[this.cellData[row][col].growthLevel as keyof typeof GROWTH_COLORS]
+                );
 
                 rowVisuals.push(cell);
                 rowPlants.push(plant);
@@ -262,7 +181,7 @@ class Grid {
                 this.cellVisuals.push(rowVisuals);
                 this.plantVisuals.push(rowPlants);
 
-                // Handle cell click
+                // Handle cell click (if future actions are added)
                 cell.on('pointerdown', () => {
                     this.onCellClick(row, col);
                 });
@@ -275,7 +194,7 @@ class Grid {
         return this.cellData[row][col];
     }
 
-    // Randomize all cell metadata
+    // Randomize all cell metadata every turn
     public randomizeCellData() {
         for (let row = 0; row < this.rows; row++) {
             for (let col = 0; col < this.cols; col++) {
@@ -287,20 +206,14 @@ class Grid {
                 };
 
                 // Update plant visual color
-                this.plantVisuals[row][col].setFillStyle(GROWTH_COLORS[this.cellData[row][col].growthLevel as keyof typeof GROWTH_COLORS]);            }
+                this.plantVisuals[row][col].setFillStyle(
+                    GROWTH_COLORS[this.cellData[row][col].growthLevel as keyof typeof GROWTH_COLORS]
+                );
+            }
         }
     }
 
     private onCellClick(row: number, col: number) {
-        // Check adjacency with the player
-        const isAdjacent = this.isAdjacent(row, col);
-        console.log(`Cell is adjacent: ${isAdjacent}`);
-    }
-
-    private isAdjacent(row: number, col: number): boolean {
-        const dRow = Math.abs(row - characterPosition.row);
-        const dCol = Math.abs(col - characterPosition.col);
-        // A cell is adjacent if it's directly next to the player or diagonal
-        return (dRow === 1 && dCol === 0) || (dRow === 0 && dCol === 1) || (dRow === 1 && dCol === 1) || (dRow === 0 && dCol === 0);
+        console.log(`Cell clicked at [${row}, ${col}]. Plant: ${this.cellData[row][col].plantType}, Growth Level: ${this.cellData[row][col].growthLevel}`);
     }
 }
