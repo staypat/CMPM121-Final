@@ -4,9 +4,10 @@ const NUM_COLS = 20;
 const CELL_SIZE = 40;
 
 // Plant types and growth levels
-const PLANT_TYPES = ["Species A", "Species B", "Species C"];
-const GROWTH_LEVELS = ["Level 1", "Level 2", "Level 3"];
+const PLANT_TYPES = ["None", "Species A", "Species B", "Species C"];
+const GROWTH_LEVELS = ["N/A", "Level 1", "Level 2", "Level 3"];
 const GROWTH_COLORS = {
+    "": 0x00000000, // clear
     "Level 1": 0xffff00, // Yellow
     "Level 2": 0x0000ff, // Blue
     "Level 3": 0x800080  // Purple
@@ -121,7 +122,7 @@ export class Play extends Phaser.Scene {
 
     private nextTurn() {
         turnCounter++;
-        this.grid.randomizeCellData(); // Randomize cell data for the next turn
+        this.grid.advanceTime(); // Randomize cell data for the next turn
     }
 }
 
@@ -145,8 +146,8 @@ class Grid {
             Array.from({ length: cols }, () => ({
                 sun: Phaser.Math.Between(1, 5),
                 water: Phaser.Math.Between(1, 10),
-                plantType: PLANT_TYPES[Phaser.Math.Between(0, PLANT_TYPES.length - 1)],
-                growthLevel: GROWTH_LEVELS[Phaser.Math.Between(0, GROWTH_LEVELS.length - 1)],
+                plantType: PLANT_TYPES[0],
+                growthLevel: GROWTH_LEVELS[0],
             }))
         );
         this.cellVisuals = [];
@@ -178,14 +179,14 @@ class Grid {
                 rowVisuals.push(cell);
                 rowPlants.push(plant);
 
-                this.cellVisuals.push(rowVisuals);
-                this.plantVisuals.push(rowPlants);
-
                 // Handle cell click (if future actions are added)
                 cell.on('pointerdown', () => {
                     this.onCellClick(row, col);
                 });
             }
+
+            this.cellVisuals.push(rowVisuals);
+            this.plantVisuals.push(rowPlants);
         }
     }
 
@@ -195,14 +196,14 @@ class Grid {
     }
 
     // Randomize all cell metadata every turn
-    public randomizeCellData() {
+    public advanceTime() {
         for (let row = 0; row < this.rows; row++) {
             for (let col = 0; col < this.cols; col++) {
                 this.cellData[row][col] = {
                     sun: Phaser.Math.Between(1, 5),
-                    water: Phaser.Math.Between(1, 10),
-                    plantType: PLANT_TYPES[Phaser.Math.Between(0, PLANT_TYPES.length - 1)],
-                    growthLevel: GROWTH_LEVELS[Phaser.Math.Between(0, GROWTH_LEVELS.length - 1)],
+                    water: this.cellData[row][col].water + Phaser.Math.Between(1, 10) - 5,
+                    plantType: this.cellData[row][col].plantType,
+                    growthLevel: this.cellData[row][col].growthLevel,
                 };
 
                 // Update plant visual color
