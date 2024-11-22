@@ -182,6 +182,16 @@ class Grid {
                 // Handle cell click (if future actions are added)
                 cell.on('pointerdown', () => {
                     this.onCellClick(row, col);
+                    // If the empty cell is adjacent to the player, plant a seed (DELETE THIS COMMENT LATER)
+                    if (this.cellData[row][col].plantType === PLANT_TYPES[0] && this.isAdjacent(row, col)) {
+                        this.plantSeed(row, col, PLANT_TYPES[Phaser.Math.Between(1, PLANT_TYPES.length - 1)]);
+                    }
+                    // Else if the cell is not empty and the growth level is max, harvest the plant (DELETE THIS COMMENT LATER)
+                    else if (this.cellData[row][col].plantType !== PLANT_TYPES[0] && this.cellData[row][col].growthLevel === GROWTH_LEVELS[GROWTH_LEVELS.length - 1]) {
+                        this.cellData[row][col].plantType = PLANT_TYPES[0];
+                        this.cellData[row][col].growthLevel = GROWTH_LEVELS[0];
+                        this.plantVisuals[row][col].setFillStyle(GROWTH_COLORS[GROWTH_LEVELS[0] as keyof typeof GROWTH_COLORS]);
+                    }
                 });
             }
 
@@ -203,7 +213,10 @@ class Grid {
                     sun: Phaser.Math.Between(1, 5),
                     water: this.cellData[row][col].water + Phaser.Math.Between(1, 10) - 5,
                     plantType: this.cellData[row][col].plantType,
-                    growthLevel: this.cellData[row][col].growthLevel,
+                    // If the sun and water are both greater than 5 and the plant level is greater than 0, increase the growth level
+                    growthLevel: (this.cellData[row][col].sun > 3 && this.cellData[row][col].water > 5 && this.cellData[row][col].growthLevel !== GROWTH_LEVELS[0]) ?
+                        GROWTH_LEVELS[Math.min(GROWTH_LEVELS.indexOf(this.cellData[row][col].growthLevel) + 1, GROWTH_LEVELS.length - 1)] :
+                        this.cellData[row][col].growthLevel
                 };
 
                 // Update plant visual color
@@ -224,5 +237,12 @@ class Grid {
         const dCol = Math.abs(col - characterPosition.col);
         // A cell is adjacent if it's directly next to the player or diagonal
         return (dRow === 1 && dCol === 0) || (dRow === 0 && dCol === 1) || (dRow === 1 && dCol === 1)  || (dRow === 0 && dCol === 0);
+    }
+
+    private plantSeed(row: number, col: number, plantType: string) {
+        // Plant a seed in the specified cell
+        this.cellData[row][col].plantType = plantType;
+        this.cellData[row][col].growthLevel = GROWTH_LEVELS[1];
+        this.plantVisuals[row][col].setFillStyle(GROWTH_COLORS[GROWTH_LEVELS[1] as keyof typeof GROWTH_COLORS]);
     }
 }
