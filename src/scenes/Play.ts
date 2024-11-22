@@ -33,6 +33,7 @@ let activeCell: { sun: number; water: number; plantType: string; growthLevel: st
 // Main Play scene
 export class Play extends Phaser.Scene {
     private grid!: Grid;
+    private hasWon: boolean = false;
 
     constructor() {
         super("Play");
@@ -124,6 +125,25 @@ export class Play extends Phaser.Scene {
         turnCounter++;
         this.grid.advanceTime(); // Randomize cell data for the next turn
     }
+
+    // Handle the win condition
+    public handleWin() {
+        this.hasWon = true; // Stop game interactions
+
+        const centerX = this.scale.width / 2;
+        const centerY = this.scale.height / 2;
+
+        // Display "You Win!" message
+        this.add.text(centerX, centerY, "You Win!", {
+            font: "32px Arial",
+            color: "#ffffff",
+            backgroundColor: "#000000",
+            padding: { x: 20, y: 20 },
+        }).setOrigin(0.5, 0.5);
+
+        // Change the button text for restarting
+        _nextTurnButton.setText("Restart").on("pointerdown", () => this.scene.restart());
+    }
 }
 
 class Grid {
@@ -131,9 +151,10 @@ class Grid {
     private rows: number;
     private cols: number;
     private cellSize: number;
-    private cellData: { sun: number; water: number; plantType: string; growthLevel: string }[][]; // Stores metadata for each cell
+    private cellData: { sun: number; water: number; plantType: string; growthLevel: string; hasCounted: boolean }[][]; // Stores metadata for each cell
     private cellVisuals: Phaser.GameObjects.Rectangle[][]; // Stores visual objects for each cell
     private plantVisuals: Phaser.GameObjects.Rectangle[][]; // Stores plant visuals for each cell
+    private level3PlantCounts: { [key: string]: number }; // Tracks counts of Level 3 plants for each species
 
     constructor(scene: Phaser.Scene, rows: number, cols: number, cellSize: number) {
         this.scene = scene;
@@ -148,10 +169,16 @@ class Grid {
                 water: Phaser.Math.Between(1, 10),
                 plantType: PLANT_TYPES[0],
                 growthLevel: GROWTH_LEVELS[0],
+                hasCounted: false
             }))
         );
         this.cellVisuals = [];
         this.plantVisuals = [];
+        this.level3PlantCounts = {
+            "Species A": 0,
+            "Species B": 0,
+            "Species C": 0,
+        };
         this.createGrid();
     }
 
@@ -211,20 +238,34 @@ class Grid {
             for (let col = 0; col < this.cols; col++) {
                 this.cellData[row][col] = {
                     sun: Phaser.Math.Between(1, 5),
-                    water: this.cellData[row][col].water + Phaser.Math.Between(1, 10) - 5,
+                    water: this.cellData[row][col].water + Phaser.Math.Between(3, 5),
                     plantType: this.cellData[row][col].plantType,
-                    // If the sun and water are both greater than 5 and the plant level is greater than 0, increase the growth level
-                    growthLevel: (this.cellData[row][col].sun > 3 && this.cellData[row][col].water > 5 && this.cellData[row][col].growthLevel !== GROWTH_LEVELS[0]) ?
+                    // If the sun is greater than 3 and water is greater than 10 and the plant level is greater than 0, increase the growth level
+                    growthLevel: (this.cellData[row][col].sun > 3 && this.cellData[row][col].water > 10 && this.cellData[row][col].growthLevel !== GROWTH_LEVELS[0]) ?
                         GROWTH_LEVELS[Math.min(GROWTH_LEVELS.indexOf(this.cellData[row][col].growthLevel) + 1, GROWTH_LEVELS.length - 1)] :
-                        this.cellData[row][col].growthLevel
+                        this.cellData[row][col].growthLevel,
+                    hasCounted: this.cellData[row][col].hasCounted
                 };
 
                 // Update plant visual color
                 this.plantVisuals[row][col].setFillStyle(
                     GROWTH_COLORS[this.cellData[row][col].growthLevel as keyof typeof GROWTH_COLORS]
                 );
+
+                // Increment win condition plant count if the plant grows to Level 3
+                if (this.cellData[row][col].growthLevel === "Level 3" && !this.cellData[row][col].hasCounted) {
+                    const plantType = this.cellData[row][col].plantType;
+                    if (this.level3PlantCounts[plantType] !== undefined) {
+                        this.level3PlantCounts[plantType]++;
+                    }
+                    this.cellData[row][col].hasCounted = true;
+                }
             }
         }
+        // Log counts of Level 3 plants to the console
+        console.log("Level 3 Plant Counts:", this.level3PlantCounts);
+        // Check win condition
+        this.checkWinCondition();
     }
 
     private onCellClick(row: number, col: number) {
@@ -244,5 +285,18 @@ class Grid {
         this.cellData[row][col].plantType = plantType;
         this.cellData[row][col].growthLevel = GROWTH_LEVELS[1];
         this.plantVisuals[row][col].setFillStyle(GROWTH_COLORS[GROWTH_LEVELS[1] as keyof typeof GROWTH_COLORS]);
+    }
+
+    // Win condition: Check if all species have more than 5 of Level 3 plants
+    private checkWinCondition() {
+        // Retrieve counts for each species
+        const speciesA = this.level3PlantCounts["Species A"];
+        const speciesB = this.level3PlantCounts["Species B"];
+        const speciesC = this.level3PlantCounts["Species C"];
+            
+        // If all species have >= 5 Level 3 plants, trigger the win state
+        if (speciesA >= 5 && speciesB >= 5 && speciesC >= 5) {
+            (this.scene as Play).handleWin();
+        }
     }
 }
