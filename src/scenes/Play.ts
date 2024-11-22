@@ -3,6 +3,15 @@ const NUM_ROWS = 12;
 const NUM_COLS = 20;
 const CELL_SIZE = 40;
 
+// Plant types and growth levels
+const PLANT_TYPES = ["Species A", "Species B", "Species C"];
+const GROWTH_LEVELS = ["Level 1", "Level 2", "Level 3"];
+const GROWTH_COLORS = {
+    "Level 1": 0xffff00, // Yellow
+    "Level 2": 0x0000ff, // Blue
+    "Level 3": 0x800080  // Purple
+};
+
 // Player character
 let character: Phaser.GameObjects.Rectangle;
 const characterPosition = { row: 0, col: 0 };
@@ -22,7 +31,7 @@ let turnCounter = 0;
 let popupText: Phaser.GameObjects.Text | null = null; // Popup info for the current cell
 let currentWaterText: Phaser.GameObjects.Text; // Tracks the player's collected water
 let currentSunText: Phaser.GameObjects.Text; // Tracks the player's collected sun
-let activeCell: { sun: number; water: number } | null = null; // Current cell the player is standing on
+let activeCell: { sun: number; water: number; plantType: string; growthLevel: string } | null = null; // Current cell the player is standing on
 
 // Player inventory
 let playerWater = 0;
@@ -149,7 +158,7 @@ export class Play extends Phaser.Scene {
             popupText = this.add.text(
                 character.x + CELL_SIZE / 2,
                 character.y - CELL_SIZE / 2,
-                `Sun: ${currentCell.sun}, Water: ${currentCell.water}\nPress W to collect water\nPress S to collect sun`,
+                `Sun: ${currentCell.sun}, Water: ${currentCell.water}\nPlant: ${currentCell.plantType}, Growth: ${currentCell.growthLevel}\nPress W to collect water\nPress S to collect sun`,
                 {
                     font: "16px Arial",
                     color: "#ffffff",
@@ -170,7 +179,7 @@ export class Play extends Phaser.Scene {
 
             // Refresh the popup text and water counter
             if (popupText) {
-                popupText.setText(`Sun: ${activeCell.sun}, Water: ${activeCell.water}\nPress W to collect water\nPress S to collect sun`);
+                popupText.setText(`Sun: ${activeCell.sun}, Water: ${activeCell.water}\nPlant: ${activeCell.plantType}, Growth: ${activeCell.growthLevel}\nPress W to collect water\nPress S to collect sun`);
             }
             currentWaterText.setText(`Water Collected: ${playerWater}`);
         } else {
@@ -189,7 +198,7 @@ export class Play extends Phaser.Scene {
 
             // Refresh the popup text and sun counter
             if (popupText) {
-                popupText.setText(`Sun: ${activeCell.sun}, Water: ${activeCell.water}\nPress W to collect water\nPress S to collect sun`);
+                popupText.setText(`Sun: ${activeCell.sun}, Water: ${activeCell.water}\nPlant: ${activeCell.plantType}, Growth: ${activeCell.growthLevel}\nPress W to collect water\nPress S to collect sun`);
             }
             currentSunText.setText(`Sun Collected: ${playerSun}`);
         } else {
@@ -208,8 +217,9 @@ class Grid {
     private rows: number;
     private cols: number;
     private cellSize: number;
-    private cellData: { sun: number; water: number }[][]; // Stores metadata for each cell
+    private cellData: { sun: number; water: number; plantType: string; growthLevel: string }[][]; // Stores metadata for each cell
     private cellVisuals: Phaser.GameObjects.Rectangle[][]; // Stores visual objects for each cell
+    private plantVisuals: Phaser.GameObjects.Rectangle[][]; // Stores plant visuals for each cell
 
     constructor(scene: Phaser.Scene, rows: number, cols: number, cellSize: number) {
         this.scene = scene;
@@ -222,15 +232,19 @@ class Grid {
             Array.from({ length: cols }, () => ({
                 sun: Phaser.Math.Between(1, 5),
                 water: Phaser.Math.Between(1, 10),
+                plantType: PLANT_TYPES[Phaser.Math.Between(0, PLANT_TYPES.length - 1)],
+                growthLevel: GROWTH_LEVELS[Phaser.Math.Between(0, GROWTH_LEVELS.length - 1)],
             }))
         );
         this.cellVisuals = [];
+        this.plantVisuals = [];
         this.createGrid();
     }
 
     private createGrid() {
         for (let row = 0; row < this.rows; row++) {
             const rowVisuals: Phaser.GameObjects.Rectangle[] = [];
+            const rowPlants: Phaser.GameObjects.Rectangle[] = [];
 
             for (let col = 0; col < this.cols; col++) {
                 const x = col * this.cellSize + this.cellSize / 2;
@@ -240,17 +254,19 @@ class Grid {
                     .setStrokeStyle(1, 0x0000ff)
                     .setInteractive();
 
+                const plant = this.scene.add.rectangle(x, y, this.cellSize / 2, this.cellSize / 2, GROWTH_COLORS[this.cellData[row][col].growthLevel]);
+
                 rowVisuals.push(cell);
+                rowPlants.push(plant);
 
                 this.cellVisuals.push(rowVisuals);
+                this.plantVisuals.push(rowPlants);
+
                 // Handle cell click
                 cell.on('pointerdown', () => {
                     this.onCellClick(row, col);
                 });
-
             }
-
-
         }
     }
 
@@ -266,7 +282,12 @@ class Grid {
                 this.cellData[row][col] = {
                     sun: Phaser.Math.Between(1, 5),
                     water: Phaser.Math.Between(1, 10),
+                    plantType: PLANT_TYPES[Phaser.Math.Between(0, PLANT_TYPES.length - 1)],
+                    growthLevel: GROWTH_LEVELS[Phaser.Math.Between(0, GROWTH_LEVELS.length - 1)],
                 };
+
+                // Update plant visual color
+                this.plantVisuals[row][col].setFillStyle(GROWTH_COLORS[this.cellData[row][col].growthLevel]);
             }
         }
     }
@@ -276,10 +297,11 @@ class Grid {
         const isAdjacent = this.isAdjacent(row, col);
         console.log(`Cell is adjacent: ${isAdjacent}`);
     }
+
     private isAdjacent(row: number, col: number): boolean {
         const dRow = Math.abs(row - characterPosition.row);
         const dCol = Math.abs(col - characterPosition.col);
         // A cell is adjacent if it's directly next to the player or diagonal
-        return (dRow === 1 && dCol === 0) || (dRow === 0 && dCol === 1) || (dRow === 1 && dCol === 1)  || (dRow === 0 && dCol === 0);
+        return (dRow === 1 && dCol === 0) || (dRow === 0 && dCol === 1) || (dRow === 1 && dCol === 1) || (dRow === 0 && dCol === 0);
     }
 }
