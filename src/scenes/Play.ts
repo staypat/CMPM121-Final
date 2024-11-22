@@ -254,7 +254,7 @@ class Grid {
                     .setStrokeStyle(1, 0x0000ff)
                     .setInteractive();
 
-                const plant = this.scene.add.rectangle(x, y, this.cellSize / 2, this.cellSize / 2, GROWTH_COLORS[this.cellData[row][col].growthLevel]);
+                    const plant = this.scene.add.rectangle(x, y, this.cellSize / 2, this.cellSize / 2, GROWTH_COLORS[this.cellData[row][col].growthLevel as keyof typeof GROWTH_COLORS]);
 
                 rowVisuals.push(cell);
                 rowPlants.push(plant);
@@ -287,8 +287,7 @@ class Grid {
                 };
 
                 // Update plant visual color
-                this.plantVisuals[row][col].setFillStyle(GROWTH_COLORS[this.cellData[row][col].growthLevel]);
-            }
+                this.plantVisuals[row][col].setFillStyle(GROWTH_COLORS[this.cellData[row][col].growthLevel as keyof typeof GROWTH_COLORS]);            }
         }
     }
 
