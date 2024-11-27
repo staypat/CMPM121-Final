@@ -10,7 +10,6 @@ const GROWTH_COLORS = {
     "Level 2": 0x0000ff, // Blue
     "Level 3": 0x800080  // Purple
 };
-
 let character: Phaser.GameObjects.Rectangle;
 const characterPosition = { row: 0, col: 0 };
 let cursors: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -41,8 +40,10 @@ export class Play extends Phaser.Scene {
         const totalGameHeight = this.scale.height;
         const blackHeight = totalGameHeight - gridHeight;
         const centerX = this.scale.width / 2;
-        const centerY = gridHeight + blackHeight / 2;
-
+    
+        // Adjust the Next Turn button to sit higher than before
+        const centerY = gridHeight + (blackHeight / 2) - 30; // Move the button 50px up
+    
         _nextTurnButton = this.add.text(centerX, centerY, "Next Turn", {
             font: "20px Arial",
             backgroundColor: "#0000ff",
@@ -51,7 +52,7 @@ export class Play extends Phaser.Scene {
             .setOrigin(0.5, 0.5)
             .setInteractive()
             .on("pointerdown", () => this.nextTurn());
-
+    
         this.addSaveLoadUI();
     }
 
@@ -121,7 +122,6 @@ export class Play extends Phaser.Scene {
             turnCounter,
             level3PlantCounts: this.grid.getLevel3PlantCounts(),
         };
-
         localStorage.setItem(slotName, JSON.stringify(gameState));
         console.log(`Game saved to slot: ${slotName}`);
     }
@@ -132,33 +132,81 @@ export class Play extends Phaser.Scene {
             console.error(`No save found in slot: ${slotName}`);
             return;
         }
-
         const gameState = JSON.parse(savedState);
-
         this.grid.loadSerializedData(gameState.gridData);
         characterPosition.row = gameState.characterPosition.row;
         characterPosition.col = gameState.characterPosition.col;
         turnCounter = gameState.turnCounter;
-
         console.log(`Game loaded from slot: ${slotName}`);
     }
 
     private addSaveLoadUI() {
-        this.add.text(10, this.scale.height - 100, "Save Slot 1", {
+        const buttonWidth = 120; // Width of each button
+        const spacing = 10; // Space between buttons
+        const yPosition = this.scale.height - 50; // Align horizontally with "Next Turn" button
+        const centerX = this.scale.width / 2; // Center point for the "Next Turn" button
+    
+        // Calculate starting x position so all buttons fit to the left of "Next Turn"
+        let xOffset = centerX - (3 * (buttonWidth + spacing)) - spacing; // Place Save/Load buttons leftwards of center
+    
+        // Save Slot 1 Button
+        this.add.text(xOffset, yPosition, "Save Slot 1", {
             font: "16px Arial",
             backgroundColor: "#008000",
             padding: { x: 10, y: 10 },
         })
             .setInteractive()
             .on("pointerdown", () => this.saveGame("SaveSlot1"));
-
-        this.add.text(10, this.scale.height - 70, "Load Slot 1", {
+    
+        // Load Slot 1 Button
+        xOffset += buttonWidth + spacing; // Move to the right of the previous button
+        this.add.text(xOffset, yPosition, "Load Slot 1", {
             font: "16px Arial",
             backgroundColor: "#800000",
             padding: { x: 10, y: 10 },
         })
             .setInteractive()
             .on("pointerdown", () => this.loadGame("SaveSlot1"));
+    
+        // Save Slot 2 Button
+        xOffset += buttonWidth + spacing; // Move to the right of the previous button
+        this.add.text(xOffset, yPosition, "Save Slot 2", {
+            font: "16px Arial",
+            backgroundColor: "#008000",
+            padding: { x: 10, y: 10 },
+        })
+            .setInteractive()
+            .on("pointerdown", () => this.saveGame("SaveSlot2"));
+    
+        // Load Slot 2 Button
+        xOffset += buttonWidth + spacing; // Move to the right of the previous button
+        this.add.text(xOffset, yPosition, "Load Slot 2", {
+            font: "16px Arial",
+            backgroundColor: "#800000",
+            padding: { x: 10, y: 10 },
+        })
+            .setInteractive()
+            .on("pointerdown", () => this.loadGame("SaveSlot2"));
+    
+        // Save Slot 3 Button
+        xOffset += buttonWidth + spacing; // Move to the right of the previous button
+        this.add.text(xOffset, yPosition, "Save Slot 3", {
+            font: "16px Arial",
+            backgroundColor: "#008000",
+            padding: { x: 10, y: 10 },
+        })
+            .setInteractive()
+            .on("pointerdown", () => this.saveGame("SaveSlot3"));
+    
+        // Load Slot 3 Button
+        xOffset += buttonWidth + spacing; // Move to the right of the previous button
+        this.add.text(xOffset, yPosition, "Load Slot 3", {
+            font: "16px Arial",
+            backgroundColor: "#800000",
+            padding: { x: 10, y: 10 },
+        })
+            .setInteractive()
+            .on("pointerdown", () => this.loadGame("SaveSlot3"));
     }
 }
 
