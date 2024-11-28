@@ -54,6 +54,20 @@ export class Play extends Phaser.Scene {
             .on("pointerdown", () => this.nextTurn());
     
         this.addSaveLoadUI();
+        
+        if (localStorage.getItem("AutoSave")) {
+            const continueText = this.add.text(centerX, centerY - 50, "Continue from last auto-save?", {
+                font: "20px Arial",
+                backgroundColor: "#0000ff",
+                padding: { x: 10, y: 10 },
+            })
+                .setOrigin(0.5, 0.5)
+                .setInteractive()
+                .on("pointerdown", () => {
+                    this.loadAutoSave();
+                    continueText.destroy();
+                });
+        }
     }
 
     override update(time: number) {
@@ -76,6 +90,7 @@ export class Play extends Phaser.Scene {
             character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
         }
         this.updatePopup();
+        this.autoSaveGame();
     }
 
     private updatePopup() {
@@ -99,10 +114,12 @@ export class Play extends Phaser.Scene {
     private nextTurn() {
         turnCounter++;
         this.grid.advanceTime();
+        this.autoSaveGame(); // Auto-save after each turn
     }
 
     public handleWin() {
         this.hasWon = true;
+        localStorage.removeItem("AutoSave"); // Clear auto-save on win
         const centerX = this.scale.width / 2;
         const centerY = this.scale.height / 2;
         this.add.text(centerX, centerY, "You Win!", {
@@ -207,6 +224,31 @@ export class Play extends Phaser.Scene {
         })
             .setInteractive()
             .on("pointerdown", () => this.loadGame("SaveSlot3"));
+    }
+
+    private autoSaveGame() {
+        const gameState = {
+            gridData: this.grid.getSerializedData(),
+            characterPosition,
+            turnCounter,
+            level3PlantCounts: this.grid.getLevel3PlantCounts(),
+        };
+        localStorage.setItem("AutoSave", JSON.stringify(gameState));
+        console.log("Game auto-saved.");
+    }
+
+    private loadAutoSave() {
+        const savedState = localStorage.getItem("AutoSave");
+        if (!savedState) {
+            console.error("No auto-save found.");
+            return;
+        }
+        const gameState = JSON.parse(savedState);
+        this.grid.loadSerializedData(gameState.gridData);
+        characterPosition.row = gameState.characterPosition.row;
+        characterPosition.col = gameState.characterPosition.col;
+        turnCounter = gameState.turnCounter;
+        console.log("Game loaded from auto-save.");
     }
 }
 
