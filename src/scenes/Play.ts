@@ -103,7 +103,6 @@ export class Play extends Phaser.Scene {
             character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
         }
         this.updatePopup();
-        this.autoSaveGame();
     }
 
     private updatePopup() {
