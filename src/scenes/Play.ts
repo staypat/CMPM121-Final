@@ -68,6 +68,19 @@ export class Play extends Phaser.Scene {
                     continueText.destroy();
                 });
         }
+
+        // Timer for autosave
+        this.time.addEvent({
+            delay: 30000, // 30 seconds
+            callback: this.autoSaveGame,
+            callbackScope: this,
+            loop: true
+        });
+    
+        // Add event listener for browser close
+        globalThis.addEventListener('beforeunload', () => {
+            this.autoSaveGame();
+        });
     }
 
     override update(time: number) {
