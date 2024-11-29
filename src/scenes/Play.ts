@@ -19,6 +19,8 @@ let _nextTurnButton: Phaser.GameObjects.Text;
 let turnCounter = 0;
 let popupText: Phaser.GameObjects.Text | null = null;
 let activeCell: { sun: number; water: number; plantType: string; growthLevel: string } | null = null;
+const undoStack: { gridData: Uint8Array; characterPosition: { row: number; col: number } }[] = [];
+const redoStack: { gridData: Uint8Array; characterPosition: { row: number; col: number } }[] = [];
 
 export class Play extends Phaser.Scene {
     private grid!: Grid;
@@ -52,6 +54,58 @@ export class Play extends Phaser.Scene {
             .setOrigin(0.5, 0.5)
             .setInteractive()
             .on("pointerdown", () => this.nextTurn());
+
+        // Add undo button
+        this.add.text(centerX - 100, centerY, "Undo", {
+            font: "20px Arial",
+            backgroundColor: "#ff0000",
+            padding: { x: 10, y: 10 },
+        })
+            .setOrigin(0.5, 0.5)
+            .setInteractive()
+            .on("pointerdown", () => {
+                if (undoStack.length > 0) {
+                    redoStack.push({
+                        gridData: new Uint8Array(this.grid.getSerializedData().gridData),
+                        characterPosition: { ...characterPosition },
+                    });
+                    const undoState = undoStack.pop();
+                    if (undoState) {
+                        this.grid.loadSerializedData({
+                            gridData: Array.from(undoState!.gridData),
+                            level3PlantCounts: this.grid.getLevel3PlantCounts()
+                        });
+                    }
+                    characterPosition.row = undoState!.characterPosition.row;
+                    characterPosition.col = undoState!.characterPosition.col;
+                }
+            });
+
+        // Add redo button
+        this.add.text(centerX + 100, centerY, "Redo", {
+            font: "20px Arial",
+            backgroundColor: "#00ff00",
+            padding: { x: 10, y: 10 },
+        })
+            .setOrigin(0.5, 0.5)
+            .setInteractive()
+            .on("pointerdown", () => {
+                if (redoStack.length > 0) {
+                    undoStack.push({
+                        gridData: new Uint8Array(this.grid.getSerializedData().gridData),
+                        characterPosition: { ...characterPosition },
+                    });
+                    const redoState = redoStack.pop();
+                    if (redoState) {
+                        this.grid.loadSerializedData({
+                            gridData: Array.from(redoState!.gridData),
+                            level3PlantCounts: this.grid.getLevel3PlantCounts()
+                        });
+                    }
+                    characterPosition.row = redoState!.characterPosition.row;
+                    characterPosition.col = redoState!.characterPosition.col;
+                }
+            });
     
         this.addSaveLoadUI();
         
@@ -377,6 +431,7 @@ class Grid {
     }
 
     public advanceTime() {
+        this.pushUndoStack();
         for (let row = 0; row < this.rows; row++) {
             for (let col = 0; col < this.cols; col++) {
                 const index = (row * this.cols + col) * 4;
@@ -387,6 +442,8 @@ class Grid {
 
                 // Grow plant if conditions are met
                 if (
+                    // Plant is present
+                    this.gridData[index + 2] !== 0 &&
                     this.gridData[index] > 3 &&                              // Plenty of sun
                     this.gridData[index + 1] > 10 &&                        // Plenty of water
                     this.gridData[index + 3] < 3                             // Growth Level < Level 3
@@ -405,6 +462,14 @@ class Grid {
             }
         }
         this.checkWinCondition();
+    }
+
+    // Push the current state to the undo stack
+    private pushUndoStack() {
+        undoStack.push({
+            gridData: new Uint8Array(this.gridData),
+            characterPosition: { row: characterPosition.row, col: characterPosition.col },
+        });
     }
 
     private onCellClick(row: number, col: number) {
