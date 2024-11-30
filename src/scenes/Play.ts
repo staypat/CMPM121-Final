@@ -413,14 +413,13 @@ class Grid {
                 // Handle cell click
                 cell.on('pointerdown', () => {
                     this.onCellClick(row, col);
-                    if (this.getCellData(row, col).plantType === PLANT_TYPES[0] && this.isAdjacent(row, col)) {
+                    const cellData = this.getCellData(row, col);
+                    if (cellData.plantType === PLANT_TYPES[0] && this.isAdjacent(row, col)) {
                         this.plantSeed(row, col, PLANT_TYPES[Phaser.Math.Between(1, PLANT_TYPES.length - 1)]);
-                    } else if (
-                        this.getCellData(row, col).plantType !== PLANT_TYPES[0] &&
-                        this.getCellData(row, col).growthLevel === GROWTH_LEVELS[3] // Growth Level 3
-                    ) {
-                        this.getCellData(row, col).plantType = PLANT_TYPES[0];
-                        this.getCellData(row, col).growthLevel = GROWTH_LEVELS[0];
+                    } else if (cellData.plantType !== PLANT_TYPES[0] && cellData.growthLevel === GROWTH_LEVELS[3] && this.isAdjacent(row, col)) {
+                        const index = (row * this.cols + col) * 4;
+                        this.gridData[index + 2] = 0
+                        this.gridData[index + 3] = 0;
                         this.plantVisuals[row][col].setFillStyle(GROWTH_COLORS[GROWTH_LEVELS[0] as keyof typeof GROWTH_COLORS]);
                     }
                 });
@@ -442,8 +441,7 @@ class Grid {
 
                 // Grow plant if conditions are met
                 if (
-                    // Plant is present
-                    this.gridData[index + 2] !== 0 &&
+                    this.gridData[index + 2] !== 0 &&                       // Plant is present
                     this.gridData[index] > 3 &&                              // Plenty of sun
                     this.gridData[index + 1] > 10 &&                        // Plenty of water
                     this.gridData[index + 3] < 3                             // Growth Level < Level 3
