@@ -35,6 +35,7 @@ export class Play extends Phaser.Scene {
     }
 
     create() {
+        // Initialize game state
         this.grid = new Grid(this, NUM_ROWS, NUM_COLS, CELL_SIZE);
         character = this.add.rectangle(CELL_SIZE / 2, CELL_SIZE / 2, CELL_SIZE / 2, CELL_SIZE / 2, 0xff0000);
         cursors = this.input.keyboard!.createCursorKeys();
@@ -42,6 +43,9 @@ export class Play extends Phaser.Scene {
         const totalGameHeight = this.scale.height;
         const blackHeight = totalGameHeight - gridHeight;
         const centerX = this.scale.width / 2;
+
+        // Push initial state to the undo stack
+        this.grid.pushUndoStack();
     
         // Adjust the Next Turn button to sit higher than before
         const centerY = gridHeight + (blackHeight / 2) - 30; // Move the button 50px up
@@ -78,6 +82,8 @@ export class Play extends Phaser.Scene {
                     }
                     characterPosition.row = undoState!.characterPosition.row;
                     characterPosition.col = undoState!.characterPosition.col;
+                    character.x = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
+                    character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
                 }
             });
 
@@ -104,6 +110,8 @@ export class Play extends Phaser.Scene {
                     }
                     characterPosition.row = redoState!.characterPosition.row;
                     characterPosition.col = redoState!.characterPosition.col;
+                    character.x = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
+                    character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
                 }
             });
     
@@ -139,23 +147,38 @@ export class Play extends Phaser.Scene {
 
     override update(time: number) {
         if (time >= lastMoveTime + MOVE_COOLDOWN) {
+            let hasMoved = false;
+    
+            // Handle player movement
             if (cursors.up.isDown && characterPosition.row > 0) {
                 characterPosition.row--;
                 lastMoveTime = time;
+                hasMoved = true;
             } else if (cursors.down.isDown && characterPosition.row < NUM_ROWS - 1) {
                 characterPosition.row++;
                 lastMoveTime = time;
+                hasMoved = true;
             } else if (cursors.left.isDown && characterPosition.col > 0) {
                 characterPosition.col--;
                 lastMoveTime = time;
+                hasMoved = true;
             } else if (cursors.right.isDown && characterPosition.col < NUM_COLS - 1) {
                 characterPosition.col++;
                 lastMoveTime = time;
+                hasMoved = true;
             }
-            // Update player visual position
-            character.x = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
-            character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
+    
+            // If the player made a valid move
+            if (hasMoved) {
+                this.grid.pushUndoStack();
+                console.log("Player Moved. Undo Stack and Redo Stack Updated.");
+                
+                // Update player visual position
+                character.x = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
+                character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
+            }
         }
+    
         this.updatePopup();
     }
 
@@ -463,11 +486,26 @@ class Grid {
     }
 
     // Push the current state to the undo stack
-    private pushUndoStack() {
-        undoStack.push({
-            gridData: new Uint8Array(this.gridData),
-            characterPosition: { row: characterPosition.row, col: characterPosition.col },
-        });
+    public pushUndoStack() {
+        const currentState = {
+            gridData: new Uint8Array(this.gridData), // Copy the current grid data
+            characterPosition: { row: characterPosition.row, col: characterPosition.col }, // Current player position
+        };
+    
+        // Prevent duplicate states in the undo stack
+        const lastState = undoStack[undoStack.length - 1];
+        if (
+            !lastState || // Push if the stack is empty
+            lastState.characterPosition.row !== currentState.characterPosition.row ||
+            lastState.characterPosition.col !== currentState.characterPosition.col || 
+            !lastState.gridData.every((value, index) => value === currentState.gridData[index]) // Compare grid data
+        ) {
+            // Push the current state
+            undoStack.push(currentState);
+            console.log(`State pushed to Undo Stack: `, currentState);
+        } else {
+            console.log("State not pushed: Current state matches the last state in the `undoStack`.");
+        }
     }
 
     private onCellClick(row: number, col: number) {
