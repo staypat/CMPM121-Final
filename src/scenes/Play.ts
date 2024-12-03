@@ -68,10 +68,10 @@ export class Play extends Phaser.Scene {
             .setOrigin(0.5, 0.5)
             .setInteractive()
             .on("pointerdown", () => {
-                if (undoStack.length > 0) {
+                if (undoStack.length != 0) {
                     redoStack.push({
                         gridData: new Uint8Array(this.grid.getSerializedData().gridData),
-                        characterPosition: { ...characterPosition },
+                        characterPosition: { row: characterPosition.row, col: characterPosition.col },
                     });
                     const undoState = undoStack.pop();
                     if (undoState) {
@@ -96,10 +96,10 @@ export class Play extends Phaser.Scene {
             .setOrigin(0.5, 0.5)
             .setInteractive()
             .on("pointerdown", () => {
-                if (redoStack.length > 0) {
+                if (redoStack.length != 0) {
                     undoStack.push({
                         gridData: new Uint8Array(this.grid.getSerializedData().gridData),
-                        characterPosition: { ...characterPosition },
+                        characterPosition: { row: characterPosition.row, col: characterPosition.col },
                     });
                     const redoState = redoStack.pop();
                     if (redoState) {
@@ -172,11 +172,10 @@ export class Play extends Phaser.Scene {
             if (hasMoved) {
                 this.grid.pushUndoStack();
                 console.log("Player Moved. Undo Stack and Redo Stack Updated.");
-                
-                // Update player visual position
-                character.x = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
-                character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
             }
+            // Update player visual position
+            character.x = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
+            character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
         }
     
         this.updatePopup();
@@ -459,11 +458,13 @@ class Grid {
                     const cellData = this.getCellData(row, col);
                     if (cellData.plantType === PLANT_TYPES[0] && this.isAdjacent(row, col)) {
                         this.plantSeed(row, col, PLANT_TYPES[Phaser.Math.Between(1, PLANT_TYPES.length - 1)]);
+                        this.pushUndoStack();
                     } else if (cellData.plantType !== PLANT_TYPES[0] && cellData.growthLevel === GROWTH_LEVELS[3] && this.isAdjacent(row, col)) {
                         const index = (row * this.cols + col) * 4;
                         this.gridData[index + 2] = 0
                         this.gridData[index + 3] = 0;
                         this.plantVisuals[row][col].setFillStyle(GROWTH_COLORS[GROWTH_LEVELS[0] as keyof typeof GROWTH_COLORS]);
+                        this.pushUndoStack();
                     }
                 });
             }
@@ -522,6 +523,7 @@ class Grid {
         ) {
             // Push the current state
             undoStack.push(currentState);
+            redoStack.length = 0; // Clear the redo stack
             console.log(`State pushed to Undo Stack: `, currentState);
         } else {
             console.log("State not pushed: Current state matches the last state in the `undoStack`.");
