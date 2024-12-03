@@ -230,6 +230,9 @@ export class Play extends Phaser.Scene {
         };
         localStorage.setItem(slotName, JSON.stringify(gameState));
         console.log(`Game saved to slot: ${slotName}`);
+        // save the undo and redo stacks for each save slot
+        localStorage.setItem(`${slotName}_undoStack`, JSON.stringify(undoStack));
+        localStorage.setItem(`${slotName}_redoStack`, JSON.stringify(redoStack));
     }
 
     private loadGame(slotName: string) {
@@ -244,6 +247,23 @@ export class Play extends Phaser.Scene {
         characterPosition.col = gameState.characterPosition.col;
         turnCounter = gameState.turnCounter;
         console.log(`Game loaded from slot: ${slotName}`);
+        // update player position
+        character.x = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
+        character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
+        
+        // load the undo and redo stacks for each save slot
+        const undoStackData = localStorage.getItem(`${slotName}_undoStack`);
+        const redoStackData = localStorage.getItem(`${slotName}_redoStack`);
+        if (undoStackData && redoStackData) {
+            undoStack.length = 0;
+            redoStack.length = 0;
+            JSON.parse(undoStackData).forEach((state: { gridData: Uint8Array; characterPosition: { row: number; col: number } }) => {
+                undoStack.push(state);
+            });
+            JSON.parse(redoStackData).forEach((state: { gridData: Uint8Array; characterPosition: { row: number; col: number } }) => {
+                redoStack.push(state);
+            });
+        }
     }
 
     private addSaveLoadUI() {
