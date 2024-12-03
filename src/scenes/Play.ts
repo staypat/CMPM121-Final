@@ -222,16 +222,23 @@ export class Play extends Phaser.Scene {
 
     private saveGame(slotName: string) {
         const gameState = {
-            gridData: this.grid.getSerializedData(),
-            characterPosition,
-            turnCounter,
-            level3PlantCounts: this.grid.getLevel3PlantCounts(),
+            gridData: this.grid.getSerializedData().gridData, // Save grid data
+            characterPosition: { ...characterPosition },       // Save player position
+            turnCounter,                                       // Save turn counter
+            level3PlantCounts: this.grid.getLevel3PlantCounts(), // Save plant counts
+            undoStack: undoStack.map(state => ({
+                gridData: Array.from(state.gridData),
+                characterPosition: { ...state.characterPosition },
+            })), // Serialize undoStack
+            redoStack: redoStack.map(state => ({
+                gridData: Array.from(state.gridData),
+                characterPosition: { ...state.characterPosition },
+            })), // Serialize redoStack
         };
+    
+        // Save game state
         localStorage.setItem(slotName, JSON.stringify(gameState));
         console.log(`Game saved to slot: ${slotName}`);
-        // save the undo and redo stacks for each save slot
-        localStorage.setItem(`${slotName}_undoStack`, JSON.stringify(undoStack));
-        localStorage.setItem(`${slotName}_redoStack`, JSON.stringify(redoStack));
     }
 
     private loadGame(slotName: string) {
@@ -240,29 +247,41 @@ export class Play extends Phaser.Scene {
             console.error(`No save found in slot: ${slotName}`);
             return;
         }
+
         const gameState = JSON.parse(savedState);
-        this.grid.loadSerializedData(gameState.gridData);
+
+        // Restore grid data, player position, and turn counter
+        this.grid.loadSerializedData({
+            gridData: gameState.gridData,
+            level3PlantCounts: gameState.level3PlantCounts,
+        });
         characterPosition.row = gameState.characterPosition.row;
         characterPosition.col = gameState.characterPosition.col;
         turnCounter = gameState.turnCounter;
-        console.log(`Game loaded from slot: ${slotName}`);
-        // update player position
+
+        // Update visuals to match the restored character position
         character.x = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
         character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
-        
-        // load the undo and redo stacks for each save slot
-        const undoStackData = localStorage.getItem(`${slotName}_undoStack`);
-        const redoStackData = localStorage.getItem(`${slotName}_redoStack`);
-        if (undoStackData && redoStackData) {
-            undoStack.length = 0;
-            redoStack.length = 0;
-            JSON.parse(undoStackData).forEach((state: { gridData: Uint8Array; characterPosition: { row: number; col: number } }) => {
-                undoStack.push(state);
+
+        // Restore undo/redo stacks
+        undoStack.length = 0; // Clear existing stack
+        redoStack.length = 0; // Clear existing stack
+        gameState.undoStack.forEach((state: { gridData: number[]; characterPosition: { row: number; col: number } }) => {
+            undoStack.push({
+                gridData: Uint8Array.from(state.gridData),
+                characterPosition: { ...state.characterPosition },
             });
-            JSON.parse(redoStackData).forEach((state: { gridData: Uint8Array; characterPosition: { row: number; col: number } }) => {
-                redoStack.push(state);
+        });
+        gameState.redoStack.forEach((state: { gridData: number[]; characterPosition: { row: number; col: number } }) => {
+            redoStack.push({
+                gridData: Uint8Array.from(state.gridData),
+                characterPosition: { ...state.characterPosition },
             });
-        }
+        });
+    
+        console.log(`Game loaded from slot: ${slotName}`);
+        console.log("Undo Stack:", undoStack);
+        console.log("Redo Stack:", redoStack);
     }
 
     private addSaveLoadUI() {
