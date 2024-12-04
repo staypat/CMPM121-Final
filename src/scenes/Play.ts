@@ -31,7 +31,10 @@ export class Play extends Phaser.Scene {
     }
 
     preload() {
-        // Preload assets if needed
+        this.load.spritesheet('plants', 'https://raw.githubusercontent.com/staypat/CMPM121-Final/refs/heads/main/assets/reap_sow_tilesheet.png', {
+            frameWidth: CELL_SIZE * 10, // Width of each tile
+            frameHeight: CELL_SIZE * 10, // Height of each tile
+        });
     }
 
     create() {
@@ -86,6 +89,7 @@ export class Play extends Phaser.Scene {
                     character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
                 }
             });
+            // this.add.sprite(20, 0, 'plants', 0).setScale(.1, .1);
 
         // Add redo button
         this.add.text(centerX + 100, centerY, "Redo", {
