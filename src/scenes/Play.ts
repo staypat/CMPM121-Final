@@ -40,7 +40,7 @@ export class Play extends Phaser.Scene {
             frameHeight: CELL_SIZE * 10, // Height of each tile
         });
         this.load.text('level1', 'assets/scenarios/level1.txt');
-        console.log(this.load.baseURL);
+        // console.log(this.load.baseURL);
 
     }
 
