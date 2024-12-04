@@ -39,7 +39,7 @@ export class Play extends Phaser.Scene {
             frameWidth: CELL_SIZE * 10, // Width of each tile
             frameHeight: CELL_SIZE * 10, // Height of each tile
         });
-        this.load.text('level1', 'CMPM121-Final/assets/scenarios/level1.txt');
+        this.load.text('level1', '/CMPM121-Final/assets/scenarios/level1.txt');
         // console.log(this.load.baseURL);
 
     }
