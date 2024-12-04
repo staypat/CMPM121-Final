@@ -12,7 +12,7 @@ const PLANT_TEXTURE_KEY: { [key: string]: number } = {
     plant_b_2: 5,   // Plant B, 2nd growth stage
     plant_b_3: 6,   // Plant B, 3rd growth stage
     plant_c_2: 9,   // Plant C, 2nd growth stage
-    plant_c_3: 10,    // Plant C, 3rd growth stage
+    plant_c_3: 10,  // Plant C, 3rd growth stage
 };
 let character: Phaser.GameObjects.Rectangle;
 const characterPosition = { row: 0, col: 0 };
@@ -471,13 +471,6 @@ class Grid {
                 const cell = this.scene.add.rectangle(x, y, this.cellSize, this.cellSize, 0x00ff00)
                     .setStrokeStyle(1, 0x0000ff)
                     .setInteractive();
-                // const plant = this.scene.add.rectangle(
-                //     x,
-                //     y,
-                //     this.cellSize / 2,
-                //     this.cellSize / 2,
-                //     GROWTH_COLORS[GROWTH_LEVELS[0] as keyof typeof GROWTH_COLORS]
-                // );
                 const plant = this.scene.add.sprite(x, y, 'plants', 0).setScale(.1);
                 // base code for img
                 // this.add.sprite(CELL_SIZE / 2, CELL_SIZE / 2, 'plants', 2).setScale(.1);
@@ -495,7 +488,11 @@ class Grid {
                         const index = (row * this.cols + col) * 4;
                         this.gridData[index + 2] = 0
                         this.gridData[index + 3] = 0;
-                        // this.plantVisuals[row][col].setFillStyle(GROWTH_COLORS[GROWTH_LEVELS[0] as keyof typeof GROWTH_COLORS]);
+                        // Update visual texture based on growth level
+                        const growthLevel = this.getCellData(row, col).growthLevel;
+                        const plantType = this.getCellData(row, col).plantType;
+                        const textureKey = `plant_${plantType.slice(-1).toLowerCase()}_${growthLevel.slice(-1)}`;
+                        this.plantVisuals[row][col].setTexture('plants', PLANT_TEXTURE_KEY[textureKey]);
                         this.pushUndoStack();
                     }
                 });
@@ -581,7 +578,6 @@ class Grid {
         const index = (row * this.cols + col) * 4;
         this.gridData[index + 2] = PLANT_TYPES.indexOf(plantType); // PlantType
         this.gridData[index + 3] = 1;                             // Growth Level 1
-        // this.plantVisuals[row][col].setFillStyle(GROWTH_COLORS["Level 1"]);
         this.plantVisuals[row][col].setTexture('plants', PLANT_TEXTURE_KEY['seedling']);
     }
 
