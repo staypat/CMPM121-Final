@@ -39,6 +39,9 @@ export class Play extends Phaser.Scene {
             frameWidth: CELL_SIZE * 10, // Width of each tile
             frameHeight: CELL_SIZE * 10, // Height of each tile
         });
+        this.load.text('level1', 'CMPM121-Final/assets/scenarios/level1.txt');
+        console.log(this.load.baseURL);
+
     }
 
     create() {
@@ -50,6 +53,25 @@ export class Play extends Phaser.Scene {
         const totalGameHeight = this.scale.height;
         const blackHeight = totalGameHeight - gridHeight;
         const centerX = this.scale.width / 2;
+        const levelData = this.cache.text.get('level1');
+        const parsedData = this.parseScenario(levelData);
+        console.log(parsedData);
+        
+        if (parsedData.StartingConditions) {
+    const startPos = parsedData.StartingConditions.find((line: string) =>
+        line.startsWith('- PlayerPosition')
+    );
+    if (startPos) {
+        const [row, col] = startPos.match(/\d+/g)!.map(Number); // Extract coordinates
+        characterPosition.row = row;
+        characterPosition.col = col;
+        character.setPosition(
+            col * CELL_SIZE + CELL_SIZE / 2,
+            row * CELL_SIZE + CELL_SIZE / 2
+        );
+    }
+}
+
 
         // Push initial state to the undo stack
         this.grid.pushUndoStack();
@@ -150,6 +172,29 @@ export class Play extends Phaser.Scene {
         globalThis.addEventListener('beforeunload', () => {
             this.autoSaveGame();
         });
+    }
+    
+    parseScenario(data: string) {
+        const lines = data.split('\n');
+        // deno-lint-ignore no-explicit-any
+        const scenario: any = {}; // Replace with a suitable type
+        let currentSection = '';
+    
+        for (const line of lines) {
+            const trimmedLine = line.trim();
+    
+            if (trimmedLine.startsWith('#')) continue; // Skip comments
+            if (trimmedLine.startsWith('[')) {
+                currentSection = trimmedLine.slice(1, -1);
+                scenario[currentSection] = [];
+                continue;
+            }
+    
+            if (currentSection) {
+                scenario[currentSection].push(trimmedLine);
+            }
+        }
+        return scenario;
     }
 
     override update(time: number) {
