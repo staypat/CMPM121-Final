@@ -39,7 +39,7 @@ export class Play extends Phaser.Scene {
             frameWidth: CELL_SIZE * 10, // Width of each tile
             frameHeight: CELL_SIZE * 10, // Height of each tile
         });
-        this.load.text('level1', 'assets/scenarios/level1.txt');
+        this.load.text('level1', 'CMPM121-Final/assets/scenarios/level1.txt');
         // console.log(this.load.baseURL);
 
     }
@@ -54,6 +54,10 @@ export class Play extends Phaser.Scene {
         const blackHeight = totalGameHeight - gridHeight;
         const centerX = this.scale.width / 2;
         const levelData = this.cache.text.get('level1');
+        if (!levelData) {
+            console.error('Failed to load level1.txt');
+            return;
+        }
         const parsedData = this.parseScenario(levelData);
         console.log(parsedData);
         
@@ -175,6 +179,10 @@ export class Play extends Phaser.Scene {
     }
     
     parseScenario(data: string) {
+        if (!data) {
+            console.error('Data is undefined or null:', data);
+            return {}; // Return an empty object to prevent further errors
+        }
         const lines = data.split('\n');
         // deno-lint-ignore no-explicit-any
         const scenario: any = {}; // Replace with a suitable type
