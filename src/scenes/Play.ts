@@ -4,11 +4,15 @@ const NUM_COLS = 20;
 const CELL_SIZE = 40;
 const PLANT_TYPES = ["None", "Species A", "Species B", "Species C"];
 const GROWTH_LEVELS = ["N/A", "Level 1", "Level 2", "Level 3"];
-const GROWTH_COLORS = {
-    "": 0x00000000, // clear
-    "Level 1": 0xffff00, // Yellow
-    "Level 2": 0x0000ff, // Blue
-    "Level 3": 0x800080  // Purple
+const PLANT_TEXTURE_KEY: { [key: string]: number } = {
+    empty: 0,       // Empty patch
+    seedling: 8,    // Shared 1st growth stage
+    plant_a_2: 1,   // Plant A, 2nd growth stage
+    plant_a_3: 2,   // Plant A, 3rd growth stage
+    plant_b_2: 5,   // Plant B, 2nd growth stage
+    plant_b_3: 6,   // Plant B, 3rd growth stage
+    plant_c_2: 9,   // Plant C, 2nd growth stage
+    plant_c_3: 10,    // Plant C, 3rd growth stage
 };
 let character: Phaser.GameObjects.Rectangle;
 const characterPosition = { row: 0, col: 0 };
@@ -89,7 +93,6 @@ export class Play extends Phaser.Scene {
                     character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
                 }
             });
-            // this.add.sprite(20, 0, 'plants', 0).setScale(.1, .1);
 
         // Add redo button
         this.add.text(centerX + 100, centerY, "Redo", {
@@ -390,7 +393,7 @@ class Grid {
     private cellSize: number;
     private gridData: Uint8Array;
     private cellVisuals: Phaser.GameObjects.Rectangle[][];
-    private plantVisuals: Phaser.GameObjects.Rectangle[][];
+    private plantVisuals: Phaser.GameObjects.Sprite[][];
     private level3PlantCounts: { [key: string]: number };
 
     constructor(scene: Phaser.Scene, rows: number, cols: number, cellSize: number) {
@@ -433,8 +436,11 @@ class Grid {
         // Update visuals to reflect the restored data
         for (let row = 0; row < this.rows; row++) {
             for (let col = 0; col < this.cols; col++) {
-                const color = GROWTH_COLORS[this.getCellData(row, col).growthLevel as keyof typeof GROWTH_COLORS];
-                this.plantVisuals[row][col].setFillStyle(color);
+                // Update visual texture based on growth level
+                const growthLevel = this.getCellData(row, col).growthLevel;
+                const plantType = this.getCellData(row, col).plantType;
+                const textureKey = `plant_${plantType.slice(-1).toLowerCase()}_${growthLevel.slice(-1)}`;
+                this.plantVisuals[row][col].setTexture('plants', PLANT_TEXTURE_KEY[textureKey]);
             }
         }
     }
@@ -458,20 +464,23 @@ class Grid {
     private createGridVisuals() {
         for (let row = 0; row < this.rows; row++) {
             const rowVisuals: Phaser.GameObjects.Rectangle[] = [];
-            const rowPlants: Phaser.GameObjects.Rectangle[] = [];
+            const rowPlants: Phaser.GameObjects.Sprite[] = [];
             for (let col = 0; col < this.cols; col++) {
                 const x = col * this.cellSize + this.cellSize / 2;
                 const y = row * this.cellSize + this.cellSize / 2;
                 const cell = this.scene.add.rectangle(x, y, this.cellSize, this.cellSize, 0x00ff00)
                     .setStrokeStyle(1, 0x0000ff)
                     .setInteractive();
-                const plant = this.scene.add.rectangle(
-                    x,
-                    y,
-                    this.cellSize / 2,
-                    this.cellSize / 2,
-                    GROWTH_COLORS[GROWTH_LEVELS[0] as keyof typeof GROWTH_COLORS]
-                );
+                // const plant = this.scene.add.rectangle(
+                //     x,
+                //     y,
+                //     this.cellSize / 2,
+                //     this.cellSize / 2,
+                //     GROWTH_COLORS[GROWTH_LEVELS[0] as keyof typeof GROWTH_COLORS]
+                // );
+                const plant = this.scene.add.sprite(x, y, 'plants', 0).setScale(.1);
+                // base code for img
+                // this.add.sprite(CELL_SIZE / 2, CELL_SIZE / 2, 'plants', 2).setScale(.1);
                 rowVisuals.push(cell);
                 rowPlants.push(plant);
 
@@ -486,7 +495,7 @@ class Grid {
                         const index = (row * this.cols + col) * 4;
                         this.gridData[index + 2] = 0
                         this.gridData[index + 3] = 0;
-                        this.plantVisuals[row][col].setFillStyle(GROWTH_COLORS[GROWTH_LEVELS[0] as keyof typeof GROWTH_COLORS]);
+                        // this.plantVisuals[row][col].setFillStyle(GROWTH_COLORS[GROWTH_LEVELS[0] as keyof typeof GROWTH_COLORS]);
                         this.pushUndoStack();
                     }
                 });
@@ -520,10 +529,15 @@ class Grid {
                     }
                 }
 
-                // Update visual color
-                this.plantVisuals[row][col].setFillStyle(
-                    GROWTH_COLORS[this.getCellData(row, col).growthLevel as keyof typeof GROWTH_COLORS]
-                );
+                // Update visual texture based on growth level
+                const growthLevel = this.getCellData(row, col).growthLevel;
+                const plantType = this.getCellData(row, col).plantType;
+                if (growthLevel !== "N/A") {
+                    if (parseInt(growthLevel.slice(-1), 10) > 1) {
+                        const textureKey = `plant_${plantType.slice(-1).toLowerCase()}_${growthLevel.slice(-1)}`;
+                        this.plantVisuals[row][col].setTexture('plants', PLANT_TEXTURE_KEY[textureKey]);
+                    }
+                }
             }
         }
         this.checkWinCondition();
@@ -567,14 +581,15 @@ class Grid {
         const index = (row * this.cols + col) * 4;
         this.gridData[index + 2] = PLANT_TYPES.indexOf(plantType); // PlantType
         this.gridData[index + 3] = 1;                             // Growth Level 1
-        this.plantVisuals[row][col].setFillStyle(GROWTH_COLORS["Level 1"]);
+        // this.plantVisuals[row][col].setFillStyle(GROWTH_COLORS["Level 1"]);
+        this.plantVisuals[row][col].setTexture('plants', PLANT_TEXTURE_KEY['seedling']);
     }
 
     private checkWinCondition() {
         const speciesA = this.level3PlantCounts["Species A"];
         const speciesB = this.level3PlantCounts["Species B"];
         const speciesC = this.level3PlantCounts["Species C"];
-        if (speciesA >= 5 && speciesB >= 5 && speciesC >= 5) {
+        if (speciesA >= 5 && speciesB >= 5 &&- speciesC >= 5) {
             (this.scene as Play).handleWin();
         }
     }
