@@ -1,0 +1,44 @@
+/* General styling */
+body, html {
+    margin: 0;
+    height: 100%; /* Ensure body takes full height */
+    display: flex;
+    justify-content: center; /* Centers horizontally */
+    align-items: center;    /* Centers vertically */
+}
+
+#app {
+    display: flex;
+    flex-direction: column; /* Stacks #gameWrapper and #saves vertically */
+}
+  
+#gameWrapper {
+    display: flex;
+    flex-direction: row; /* Change to row to align children horizontally */
+    align-items: center; /* Centers content vertically if needed */
+}
+
+#gameView {
+    width: 800px;
+    height: 600px;
+    background-color: orange; /* Example background */
+}
+
+#stats {
+    width: 200px;
+    height: 600px;
+    background-color: red; /* Example background */
+}
+
+#saves {
+    width: 1000px; /* Matches the width of the top section */
+    height: 100px; /* Adjust as needed */
+    background-color: yellow; /* Example background */
+}
+
+#savesButtonContainer {
+    width: 800px;
+    height: 100px; /* Adjust as needed */
+    background-color: rgb(255, 0, 149); /* Example background */
+}
+  

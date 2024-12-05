@@ -1,5 +1,6 @@
 /// <reference path="../lib/phaser.d.ts" />
 import { Play } from './scenes/Play.ts';
+import "./style.css";
 
 const config: Phaser.Types.Core.GameConfig = {
     parent: 'gameView',
