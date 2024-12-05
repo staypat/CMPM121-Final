@@ -52,6 +52,7 @@ export class Play extends Phaser.Scene {
         // Initialize game state
         this.grid = new Grid(this, NUM_ROWS, NUM_COLS, CELL_SIZE);
         character = this.add.sprite(CELL_SIZE / 2, CELL_SIZE / 2, 'player').setScale(.1);
+        character.isMoving = false;
         cursors = this.input.keyboard!.createCursorKeys();
         const gridHeight = NUM_ROWS * CELL_SIZE;
         const totalGameHeight = this.scale.height;
@@ -210,36 +211,52 @@ export class Play extends Phaser.Scene {
     }
 
     override update(time: number) {
-        if (time >= lastMoveTime + MOVE_COOLDOWN) {
+        // Only handle input if the cooldown period has expired and no tween is running
+        if (time >= lastMoveTime + MOVE_COOLDOWN && !character.isMoving) {
             let hasMoved = false;
     
-            // Handle player movement
+            // Handle player movement inputs
             if (cursors.up.isDown && characterPosition.row > 0) {
                 characterPosition.row--;
-                lastMoveTime = time;
                 hasMoved = true;
             } else if (cursors.down.isDown && characterPosition.row < NUM_ROWS - 1) {
                 characterPosition.row++;
-                lastMoveTime = time;
                 hasMoved = true;
             } else if (cursors.left.isDown && characterPosition.col > 0) {
                 characterPosition.col--;
-                lastMoveTime = time;
+                character.flipX = true;
                 hasMoved = true;
             } else if (cursors.right.isDown && characterPosition.col < NUM_COLS - 1) {
                 characterPosition.col++;
-                lastMoveTime = time;
+                character.flipX = false;
                 hasMoved = true;
             }
     
-            // If the player made a valid move
             if (hasMoved) {
+                // Push move to undo stack
                 this.grid.pushUndoStack();
                 console.log("Player Moved. Undo Stack and Redo Stack Updated.");
+    
+                // Lock movement and set cooldown
+                character.isMoving = true; // Custom property to lock movement
+                lastMoveTime = time;
+    
+                // Calculate target visual position
+                const targetX = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
+                const targetY = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
+    
+                // Tween for smooth movement
+                this.tweens.add({
+                    targets: character,
+                    x: targetX,
+                    y: targetY,
+                    duration: MOVE_COOLDOWN, // Match tween duration to your cooldown
+                    ease: 'Linear',
+                    onComplete: () => {
+                        character.isMoving = false; // Unlock movement after tween completes
+                    }
+                });
             }
-            // Update player visual position
-            character.x = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
-            character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
         }
     
         this.updatePopup();
