@@ -51,7 +51,7 @@ export class Play extends Phaser.Scene {
     create() {
         // Initialize game state
         this.grid = new Grid(this, NUM_ROWS, NUM_COLS, CELL_SIZE);
-        character = this.add.sprite(CELL_SIZE / 2, CELL_SIZE / 2, 'player');
+        character = this.add.sprite(CELL_SIZE / 2, CELL_SIZE / 2, 'player').setScale(.1);
         cursors = this.input.keyboard!.createCursorKeys();
         const gridHeight = NUM_ROWS * CELL_SIZE;
         const totalGameHeight = this.scale.height;
@@ -529,8 +529,6 @@ class Grid {
                     .setStrokeStyle(1, 0x0000ff)
                     .setInteractive();
                 const plant = this.scene.add.sprite(x, y, 'plants', 0).setScale(.1);
-                // base code for img
-                // this.add.sprite(CELL_SIZE / 2, CELL_SIZE / 2, 'plants', 2).setScale(.1);
                 rowVisuals.push(cell);
                 rowPlants.push(plant);
 
