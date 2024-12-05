@@ -26,6 +26,7 @@ let activeCell: { sun: number; water: number; plantType: string; growthLevel: st
 const undoStack: { gridData: Uint8Array; characterPosition: { row: number; col: number } }[] = [];
 const redoStack: { gridData: Uint8Array; characterPosition: { row: number; col: number } }[] = [];
 
+import * as yaml from 'js-yaml';
 export class Play extends Phaser.Scene {
     private grid!: Grid;
     private hasWon: boolean = false;
@@ -40,12 +41,14 @@ export class Play extends Phaser.Scene {
             frameHeight: CELL_SIZE * 10, // Height of each tile
         });
         this.load.image('player', 'https://raw.githubusercontent.com/staypat/CMPM121-Final/refs/heads/main/assets/astronaut.png');
-        const url = new URL('../../assets/scenarios/level1.txt', import.meta.url).href;
+        const url = new URL('../../assets/scenarios/level1.yaml', import.meta.url).href;
         console.log('Loading level file from:', url);
         this.load.text('level1', url);
         // this.load.text('level1', '/CMPM121-Final/assets/scenarios/level1.txt');
         // console.log(this.load.baseURL);
     }
+
+    
 
     create() {
         // Initialize game state
@@ -59,18 +62,16 @@ export class Play extends Phaser.Scene {
 
         const levelData = this.cache.text.get('level1');
         if (!levelData) {
-            console.error('Failed to load level1.txt');
+            console.error('Failed to load level1.yaml');
             return;
         }
-        const parsedData = this.parseScenario(levelData);
+        const parsedData = yaml.load(levelData);
         console.log(parsedData);
         
         if (parsedData.StartingConditions) {
-            const startPos = parsedData.StartingConditions.find((line: string) =>
-                line.startsWith('- PlayerPosition')
-            );
+            const startPos = parsedData.StartingConditions.PlayerPosition;
             if (startPos) {
-                const [row, col] = startPos.match(/\d+/g)!.map(Number); // Extract coordinates
+                const [row, col] = startPos;
                 characterPosition.row = row;
                 characterPosition.col = col;
                 character.setPosition(
@@ -182,32 +183,6 @@ export class Play extends Phaser.Scene {
         });
     }
 
-    parseScenario(data: string) {
-        if (!data) {
-            console.error('Data is undefined or null:', data);
-            return {}; // Return an empty object to prevent further errors
-        }
-        const lines = data.split('\n');
-        // deno-lint-ignore no-explicit-any
-        const scenario: any = {}; // Replace with a suitable type
-        let currentSection = '';
-    
-        for (const line of lines) {
-            const trimmedLine = line.trim();
-    
-            if (trimmedLine.startsWith('#')) continue; // Skip comments
-            if (trimmedLine.startsWith('[')) {
-                currentSection = trimmedLine.slice(1, -1);
-                scenario[currentSection] = [];
-                continue;
-            }
-    
-            if (currentSection) {
-                scenario[currentSection].push(trimmedLine);
-            }
-        }
-        return scenario;
-    }
 
     override update(time: number) {
         // Only handle input if the cooldown period has expired and no tween is running
