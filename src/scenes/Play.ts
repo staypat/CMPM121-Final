@@ -14,7 +14,7 @@ const PLANT_TEXTURE_KEY: { [key: string]: number } = {
     plant_c_2: 9,   // Plant C, 2nd growth stage
     plant_c_3: 10,  // Plant C, 3rd growth stage
 };
-let character: Phaser.GameObjects.Rectangle;
+let character: Phaser.GameObjects.Sprite;
 const characterPosition = { row: 0, col: 0 };
 let cursors: Phaser.Types.Input.Keyboard.CursorKeys;
 const MOVE_COOLDOWN = 250;
@@ -39,6 +39,7 @@ export class Play extends Phaser.Scene {
             frameWidth: CELL_SIZE * 10, // Width of each tile
             frameHeight: CELL_SIZE * 10, // Height of each tile
         });
+        this.load.image('player', 'https://raw.githubusercontent.com/staypat/CMPM121-Final/refs/heads/main/assets/astronaut.png');
         const url = '/CMPM121-Final/assets/scenarios/level1.txt';
         console.log('Loading level file from:', url);
         this.load.text('level1', url);
@@ -50,7 +51,7 @@ export class Play extends Phaser.Scene {
     create() {
         // Initialize game state
         this.grid = new Grid(this, NUM_ROWS, NUM_COLS, CELL_SIZE);
-        character = this.add.rectangle(CELL_SIZE / 2, CELL_SIZE / 2, CELL_SIZE / 2, CELL_SIZE / 2, 0xff0000);
+        character = this.add.sprite(CELL_SIZE / 2, CELL_SIZE / 2, 'player').setScale(.1);
         cursors = this.input.keyboard!.createCursorKeys();
         const gridHeight = NUM_ROWS * CELL_SIZE;
         const totalGameHeight = this.scale.height;
@@ -528,8 +529,6 @@ class Grid {
                     .setStrokeStyle(1, 0x0000ff)
                     .setInteractive();
                 const plant = this.scene.add.sprite(x, y, 'plants', 0).setScale(.1);
-                // base code for img
-                // this.add.sprite(CELL_SIZE / 2, CELL_SIZE / 2, 'plants', 2).setScale(.1);
                 rowVisuals.push(cell);
                 rowPlants.push(plant);
 
