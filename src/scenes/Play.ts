@@ -44,8 +44,6 @@ export class Play extends Phaser.Scene {
         const url = new URL('../../assets/scenarios/level1.yaml', import.meta.url).href;
         console.log('Loading level file from:', url);
         this.load.text('level1', url);
-        // this.load.text('level1', '/CMPM121-Final/assets/scenarios/level1.txt');
-        // console.log(this.load.baseURL);
     }
 
     
