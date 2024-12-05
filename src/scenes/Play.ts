@@ -36,12 +36,12 @@ export class Play extends Phaser.Scene {
     }
 
     preload() {
-        this.load.spritesheet('plants', 'https://raw.githubusercontent.com/staypat/CMPM121-Final/refs/heads/main/assets/reap_sow_tilesheet.png', {
+        this.load.spritesheet('plants', '/assets/reap_sow_tilesheet.png', {
             frameWidth: CELL_SIZE * 10, // Width of each tile
             frameHeight: CELL_SIZE * 10, // Height of each tile
         });
-        this.load.image('player', 'https://raw.githubusercontent.com/staypat/CMPM121-Final/refs/heads/main/assets/astronaut.png');
-        const url = `${globalThis.location.origin}/CMPM121-Final/assets/scenarios/level1.yaml`;
+        this.load.image('player', '/assets/astronaut.png');
+        const url = '/assets/scenarios/level1.yaml';
         console.log('Loading level file from:', url);
         this.load.text('level1', url);
     }
