@@ -41,7 +41,7 @@ export class Play extends Phaser.Scene {
             frameHeight: CELL_SIZE * 10, // Height of each tile
         });
         this.load.image('player', 'https://raw.githubusercontent.com/staypat/CMPM121-Final/refs/heads/main/assets/astronaut.png');
-        const url = '/CMPM121-Final/assets/scenarios/level1.txt';
+        const url = '/CMPM121-Final/assets/scenarios/level1.yaml';
         console.log('Loading level file from:', url);
         this.load.text('level1', url);
     }
