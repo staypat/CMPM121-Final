@@ -40,11 +40,6 @@ export class Play extends Phaser.Scene {
             frameHeight: CELL_SIZE * 10, // Height of each tile
         });
         this.load.image('player', 'https://raw.githubusercontent.com/staypat/CMPM121-Final/refs/heads/main/assets/astronaut.png');
-        const url = '/CMPM121-Final/assets/scenarios/level1.txt';
-        console.log('Loading level file from:', url);
-        this.load.text('level1', url);
-        // this.load.text('level1', '/CMPM121-Final/assets/scenarios/level1.txt');
-        // console.log(this.load.baseURL);
 
     }
 
@@ -52,35 +47,11 @@ export class Play extends Phaser.Scene {
         // Initialize game state
         this.grid = new Grid(this, NUM_ROWS, NUM_COLS, CELL_SIZE);
         character = this.add.sprite(CELL_SIZE / 2, CELL_SIZE / 2, 'player').setScale(.1);
-        character.isMoving = false;
         cursors = this.input.keyboard!.createCursorKeys();
         const gridHeight = NUM_ROWS * CELL_SIZE;
         const totalGameHeight = this.scale.height;
         const blackHeight = totalGameHeight - gridHeight;
         const centerX = this.scale.width / 2;
-        const levelData = this.cache.text.get('level1');
-        if (!levelData) {
-            console.error('Failed to load level1.txt');
-            return;
-        }
-        const parsedData = this.parseScenario(levelData);
-        console.log(parsedData);
-        
-        if (parsedData.StartingConditions) {
-    const startPos = parsedData.StartingConditions.find((line: string) =>
-        line.startsWith('- PlayerPosition')
-    );
-    if (startPos) {
-        const [row, col] = startPos.match(/\d+/g)!.map(Number); // Extract coordinates
-        characterPosition.row = row;
-        characterPosition.col = col;
-        character.setPosition(
-            col * CELL_SIZE + CELL_SIZE / 2,
-            row * CELL_SIZE + CELL_SIZE / 2
-        );
-    }
-}
-
 
         // Push initial state to the undo stack
         this.grid.pushUndoStack();
@@ -182,38 +153,13 @@ export class Play extends Phaser.Scene {
             this.autoSaveGame();
         });
     }
-    
-    parseScenario(data: string) {
-        if (!data) {
-            console.error('Data is undefined or null:', data);
-            return {}; // Return an empty object to prevent further errors
-        }
-        const lines = data.split('\n');
-        // deno-lint-ignore no-explicit-any
-        const scenario: any = {}; // Replace with a suitable type
-        let currentSection = '';
-    
-        for (const line of lines) {
-            const trimmedLine = line.trim();
-    
-            if (trimmedLine.startsWith('#')) continue; // Skip comments
-            if (trimmedLine.startsWith('[')) {
-                currentSection = trimmedLine.slice(1, -1);
-                scenario[currentSection] = [];
-                continue;
-            }
-    
-            if (currentSection) {
-                scenario[currentSection].push(trimmedLine);
-            }
-        }
-        return scenario;
-    }
 
     override update(time: number) {
         // Only handle input if the cooldown period has expired and no tween is running
-        if (time >= lastMoveTime + MOVE_COOLDOWN && !character.isMoving) {
+        let isMoving = false;
+        if (time >= lastMoveTime + MOVE_COOLDOWN && !isMoving) {
             let hasMoved = false;
+
     
             // Handle player movement inputs
             if (cursors.up.isDown && characterPosition.row > 0) {
@@ -238,7 +184,7 @@ export class Play extends Phaser.Scene {
                 console.log("Player Moved. Undo Stack and Redo Stack Updated.");
     
                 // Lock movement and set cooldown
-                character.isMoving = true; // Custom property to lock movement
+                isMoving = true; // Custom property to lock movement
                 lastMoveTime = time;
     
                 // Calculate target visual position
@@ -253,7 +199,7 @@ export class Play extends Phaser.Scene {
                     duration: MOVE_COOLDOWN, // Match tween duration to your cooldown
                     ease: 'Linear',
                     onComplete: () => {
-                        character.isMoving = false; // Unlock movement after tween completes
+                        isMoving = false; // Unlock movement after tween completes
                     }
                 });
             }
