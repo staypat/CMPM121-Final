@@ -5,6 +5,7 @@
   "winMessage": "¡Tú ganas!",
   "saveSlot": "Guardar ranura {slot}",
   "loadSlot": "Cargar ranura {slot}",
+  "autoSaveMessage": "¿Continuar desde el guardado automático?",
   "popup": {
       "sun": "Sol",
       "water": "Agua",

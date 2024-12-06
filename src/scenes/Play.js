@@ -55,8 +55,16 @@ export class Play extends Phaser.Scene {
         if (undoButton) undoButton.setText(this.localization.undo || "Undo");
         if (redoButton) redoButton.setText(this.localization.redo || "Redo");
     
-        // Win message
-        if (this.hasWon && winText) winText.setText(this.localization.winMessage || "You Win!");
+        // Update Save/Load buttons
+        this.refreshSaveLoadButtonsText();
+
+        // Refresh Auto-Save message
+        this.refreshAutoSaveMessage();
+
+        // If the player has won, translate the win text
+        if (this.hasWon && winText) {
+            winText.setText(this.localization.winMessage || "You Win!");
+        }
     
         // Popup text
         if (popupText && activeCell) {
@@ -64,6 +72,13 @@ export class Play extends Phaser.Scene {
                 `${this.localization.popup?.sun || "Sun"}: ${activeCell.sun}, ${this.localization.popup?.water || "Water"}: ${activeCell.water}\n` +
                 `${this.localization.popup?.plant || "Plant"}: ${activeCell.plantType}, ${this.localization.popup?.growth || "Growth"}: ${activeCell.growthLevel}`
             );
+        }
+    }
+
+    refreshAutoSaveMessage() {
+        if (this.autoSaveMessage && this.localization) {
+            const message = this.localization.autoSaveMessage || "Continue from last auto-save?";
+            this.autoSaveMessage.setText(message);
         }
     }
 
@@ -207,8 +222,9 @@ export class Play extends Phaser.Scene {
     
         this.addSaveLoadUI();
         
+        // Check if an auto-save exists, then create the message
         if (localStorage.getItem("AutoSave")) {
-            const continueText = this.add.text(centerX, centerY - 50, "Continue from last auto-save?", {
+            this.autoSaveMessage = this.add.text(centerX, centerY - 50, "", {
                 font: "20px Arial",
                 backgroundColor: "#0000ff",
                 padding: { x: 10, y: 10 },
@@ -217,8 +233,11 @@ export class Play extends Phaser.Scene {
                 .setInteractive()
                 .on("pointerdown", () => {
                     this.loadAutoSave();
-                    continueText.destroy();
+                    this.autoSaveMessage.destroy(); // Remove the message after continuing
                 });
+
+            // Refresh the auto-save message to set the correct language immediately
+            this.refreshAutoSaveMessage();
         }
 
         // Timer for autosave
@@ -399,11 +418,14 @@ export class Play extends Phaser.Scene {
         const yPosition = this.scale.height - 50; // Align horizontally with "Next Turn" button
         const centerX = this.scale.width / 2; // Center point for the "Next Turn" button
     
+        // Track Save/Load buttons for translation
+        this.saveLoadButtons = [];
+    
         // Calculate starting x position so all buttons fit to the left of "Next Turn"
         let xOffset = centerX - (3 * (buttonWidth + spacing)) - spacing; // Place Save/Load buttons leftwards of center
     
         // Save Slot 1 Button
-        this.add.text(xOffset, yPosition, "Save Slot 1", {
+        const saveSlot1Button = this.add.text(xOffset, yPosition, "", {
             font: "16px Arial",
             backgroundColor: "#008000",
             padding: { x: 10, y: 10 },
@@ -411,9 +433,11 @@ export class Play extends Phaser.Scene {
             .setInteractive()
             .on("pointerdown", () => this.saveGame("SaveSlot1"));
     
+        this.saveLoadButtons.push({ type: "save", slot: 1, button: saveSlot1Button });
+    
         // Load Slot 1 Button
         xOffset += buttonWidth + spacing; // Move to the right of the previous button
-        this.add.text(xOffset, yPosition, "Load Slot 1", {
+        const loadSlot1Button = this.add.text(xOffset, yPosition, "", {
             font: "16px Arial",
             backgroundColor: "#800000",
             padding: { x: 10, y: 10 },
@@ -421,9 +445,11 @@ export class Play extends Phaser.Scene {
             .setInteractive()
             .on("pointerdown", () => this.loadGame("SaveSlot1"));
     
+        this.saveLoadButtons.push({ type: "load", slot: 1, button: loadSlot1Button });
+    
         // Save Slot 2 Button
         xOffset += buttonWidth + spacing; // Move to the right of the previous button
-        this.add.text(xOffset, yPosition, "Save Slot 2", {
+        const saveSlot2Button = this.add.text(xOffset, yPosition, "", {
             font: "16px Arial",
             backgroundColor: "#008000",
             padding: { x: 10, y: 10 },
@@ -431,9 +457,11 @@ export class Play extends Phaser.Scene {
             .setInteractive()
             .on("pointerdown", () => this.saveGame("SaveSlot2"));
     
+        this.saveLoadButtons.push({ type: "save", slot: 2, button: saveSlot2Button });
+    
         // Load Slot 2 Button
         xOffset += buttonWidth + spacing; // Move to the right of the previous button
-        this.add.text(xOffset, yPosition, "Load Slot 2", {
+        const loadSlot2Button = this.add.text(xOffset, yPosition, "", {
             font: "16px Arial",
             backgroundColor: "#800000",
             padding: { x: 10, y: 10 },
@@ -441,9 +469,11 @@ export class Play extends Phaser.Scene {
             .setInteractive()
             .on("pointerdown", () => this.loadGame("SaveSlot2"));
     
+        this.saveLoadButtons.push({ type: "load", slot: 2, button: loadSlot2Button });
+    
         // Save Slot 3 Button
         xOffset += buttonWidth + spacing; // Move to the right of the previous button
-        this.add.text(xOffset, yPosition, "Save Slot 3", {
+        const saveSlot3Button = this.add.text(xOffset, yPosition, "", {
             font: "16px Arial",
             backgroundColor: "#008000",
             padding: { x: 10, y: 10 },
@@ -451,15 +481,32 @@ export class Play extends Phaser.Scene {
             .setInteractive()
             .on("pointerdown", () => this.saveGame("SaveSlot3"));
     
+        this.saveLoadButtons.push({ type: "save", slot: 3, button: saveSlot3Button });
+    
         // Load Slot 3 Button
         xOffset += buttonWidth + spacing; // Move to the right of the previous button
-        this.add.text(xOffset, yPosition, "Load Slot 3", {
+        const loadSlot3Button = this.add.text(xOffset, yPosition, "", {
             font: "16px Arial",
             backgroundColor: "#800000",
             padding: { x: 10, y: 10 },
         })
             .setInteractive()
             .on("pointerdown", () => this.loadGame("SaveSlot3"));
+    
+        this.saveLoadButtons.push({ type: "load", slot: 3, button: loadSlot3Button });
+    
+        // Refresh Save/Load text in case language changes
+        this.refreshSaveLoadButtonsText();
+    }
+
+    refreshSaveLoadButtonsText() {
+        if (!this.saveLoadButtons || !this.localization) return;
+    
+        this.saveLoadButtons.forEach(({ type, slot, button }) => {
+            const textKey = type === "save" ? "saveSlot" : "loadSlot";
+            const translatedText = this.localization[textKey]?.replace("{slot}", slot) || `${type} Slot ${slot}`;
+            button.setText(translatedText);
+        });
     }
 
     autoSaveGame() {
@@ -764,4 +811,3 @@ export const PlantDSL = {
 console.log(PlantDSL["Species A"]);
 console.log(PlantDSL["Species B"]);
 console.log(PlantDSL["Species C"]);
-

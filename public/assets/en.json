@@ -5,6 +5,7 @@
   "winMessage": "You Win!",
   "saveSlot": "Save Slot {slot}",
   "loadSlot": "Load Slot {slot}",
+  "autoSaveMessage": "Continue from last auto-save?",
   "popup": {
       "sun": "Sun",
       "water": "Water",
