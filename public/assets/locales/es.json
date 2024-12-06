@@ -1,0 +1,14 @@
+{
+  "nextTurn": "Siguiente turno",
+  "undo": "Deshacer",
+  "redo": "Rehacer",
+  "winMessage": "¡Tú ganas!",
+  "saveSlot": "Guardar ranura {slot}",
+  "loadSlot": "Cargar ranura {slot}",
+  "popup": {
+      "sun": "Sol",
+      "water": "Agua",
+      "plant": "Planta",
+      "growth": "Crecimiento"
+  }
+}

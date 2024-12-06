@@ -1,0 +1,14 @@
+{
+  "nextTurn": "Next Turn",
+  "undo": "Undo",
+  "redo": "Redo",
+  "winMessage": "You Win!",
+  "saveSlot": "Save Slot {slot}",
+  "loadSlot": "Load Slot {slot}",
+  "popup": {
+      "sun": "Sun",
+      "water": "Water",
+      "plant": "Plant",
+      "growth": "Growth"
+  }
+}

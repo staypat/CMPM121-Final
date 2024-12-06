@@ -36,6 +36,10 @@ export class Play extends Phaser.Scene {
     }
 
     preload() {
+        //international languages
+        this.load.json('en', '/locales/en.json'); //english
+        this.load.json('es', '/locales/es.json'); //spanish
+
         this.load.spritesheet('plants', '/CMPM121-Final/assets/reap_sow_tilesheet.png', {
             frameWidth: CELL_SIZE * 10, // Width of each tile
             frameHeight: CELL_SIZE * 10, // Height of each tile
@@ -46,7 +50,6 @@ export class Play extends Phaser.Scene {
         this.load.text('level1', url);
     }
 
-    
 
     create() {
         // Initialize game state
