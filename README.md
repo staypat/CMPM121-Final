@@ -1,4 +1,65 @@
 # CMPM121-Final
+# Devlog Entry - [12/2/2024]
+## How we satisfied the software requirements
+### F0+F1
+[F0.f] We have added new spatial rules that affect how plant growth is determined through our new internal plant DSL. They are now determined by the state of the current cell and its neighboring cells.
+
+[F0 + F1] No other major changes were made.
+
+### External DSL for Scenario Design
+
+The design of our external DSL for scenario design utilizes YAML. 
+```
+StartingConditions:
+  PlayerPosition: [2, 2]
+  InitialResources:
+    Sun: 5
+    Water: 10
+```
+This is our scenario for the player to start at the 3rd row and 3rd column (our first row/col is at [0, 0]). When we parse the YAML file, we set characterPosition to the given playerPosition inside the YAML file.
+
+### Internal DSL for Plants and Growth Conditions
+
+```
+export const PlantDSL = {
+    "Species A": {
+        // Rule: Grows if sun > 3 and water > 8
+        growthRules: [
+            (cell) => cell.sun > 3,
+            (cell) => cell.water > 8
+        ]
+    },
+  /* More plant logic below */
+```
+In this code snippet, we are using JavaScript to host our internal DSL.
+```
+const cellData = this.getCellData(row, col); // Retrieve data for this cell
+const plantType = cellData.plantType;
+
+// Skip empty cells
+if (plantType === "None") continue;
+
+// Retrieve growth rules for this plant type
+const rules = PlantDSL[plantType]?.growthRules;
+if (!rules || rules.length === 0) continue;
+
+// Check if all growth rules are satisfied
+const satisfiesRules = rules.every(rule => rule(cellData, this, row, col));
+
+if (satisfiesRules && cellData.growthLevel !== "Level 3") {
+    // Increment growth level
+    this.gridData[index + 3]++;
+    /* Updating internal grid cell data below */
+```
+In our PlantDSL, we define the spatial growth rules for each species type we have (A, B, and C). For Species A, the plant may only grow if the grid cell it is in has more than 3 sun and 8 water. This is done by passing `const rules` and `const satisfiesRules` through if-statements to determine whether the plant can level up or not. Our internal DSL does not require parsing through a file like an external DSL would. As such, we can run these functions during runtime to check our grid state, which governs plant growth.
+
+### Switch to Alternate Platform
+
+We started with TypeScript and we changed this programming language to JavaScript. All of our data were able to be carried over to the new platform because TypeScript is a strictly typed language to JavaScript. All of our game logic remained the same because they are based on Phaser APIs which are consistent across both languages. We removed type annotations and updated our interfaces with a typedef instead.
+
+## Reflection
+With the new F2 requirements, our team had to add unique growth rules in order to support the F2.b requirement since they had to be structurally different. We have also begun to simplify the UI by adding temporary divs where we will display our save states, so that it does not interfere with the player experience. Similarly, the shift from TypeScript to JavaScript will also simplify how we approach our code structure because JavaScript's lack of type checking allows us to iterate faster during the development process.
+
 # Devlog Entry - [11/27/2024]
 ## How we satisfied the software requirements
 [F1.a] The important state of our game's grid is backed by a single continuous byte array in Array of Structures format. It is Uint8Array called "gridData" that holds the grid's sun levels, water levels, plant type, and growth level. Each part of our
