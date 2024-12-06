@@ -458,7 +458,7 @@ class Grid {
     }
 
     // This method retrieves metadata for a specific cell
-    public getCellData(row: number, col: number) {
+    public getCellData(row: number, col: number): CellData {
         const index = (row * this.cols + col) * 4;
         return {
             sun: this.gridData[index], // Sunlight value
@@ -553,32 +553,35 @@ class Grid {
         for (let row = 0; row < this.rows; row++) {
             for (let col = 0; col < this.cols; col++) {
                 const index = (row * this.cols + col) * 4;
+                this.gridData[index] = Phaser.Math.Between(1, 5); // Update sun value
+                this.gridData[index + 1] += Phaser.Math.Between(2, 3); // Update water value
+                const cellData = this.getCellData(row, col); // Retrieve data for this cell
+                const plantType = cellData.plantType;
 
-                // Randomize sun and water values
-                this.gridData[index] = Phaser.Math.Between(1, 5);       // Sun value
-                this.gridData[index + 1] += Phaser.Math.Between(3, 5); // Water adjustment
+                // Skip empty cells
+                if (plantType === "None") continue;
 
-                // Grow plant if conditions are met
-                if (
-                    this.gridData[index + 2] !== 0 &&                       // Plant is present
-                    this.gridData[index] > 3 &&                              // Plenty of sun
-                    this.gridData[index + 1] > 10 &&                        // Plenty of water
-                    this.gridData[index + 3] < 3                             // Growth Level < Level 3
-                ) {
+                // Retrieve growth rules for this plant type
+                const rules = PlantDSL[plantType as keyof typeof PlantDSL]?.growthRules;
+                if (!rules || rules.length === 0) continue;
+
+                // Check if all growth rules are satisfied
+                const satisfiesRules = rules.every(rule => rule(cellData, this, row, col));
+
+                if (satisfiesRules && cellData.growthLevel !== "Level 3") {
+                    // Increment growth level
                     this.gridData[index + 3]++;
-                    const plantType = PLANT_TYPES[this.gridData[index + 2]];
-                    if (this.gridData[index + 3] === 3 && this.level3PlantCounts[plantType] !== undefined) {
+    
+                    const newGrowthLevel = GROWTH_LEVELS[this.gridData[index + 3]];
+                    console.log(`${plantType} in (${row}, ${col}) grew to ${newGrowthLevel}`);
+    
+                    // Update visuals
+                    const textureKey = `plant_${plantType.slice(-1).toLowerCase()}_${newGrowthLevel.slice(-1)}`;
+                    this.plantVisuals[row][col].setTexture('plants', PLANT_TEXTURE_KEY[textureKey]);
+    
+                    // Update Level 3 counts if applicable
+                    if (newGrowthLevel === "Level 3" && this.level3PlantCounts[plantType] !== undefined) {
                         this.level3PlantCounts[plantType]++;
-                    }
-                }
-
-                // Update visual texture based on growth level
-                const growthLevel = this.getCellData(row, col).growthLevel;
-                const plantType = this.getCellData(row, col).plantType;
-                if (growthLevel !== "N/A") {
-                    if (parseInt(growthLevel.slice(-1), 10) > 1) {
-                        const textureKey = `plant_${plantType.slice(-1).toLowerCase()}_${growthLevel.slice(-1)}`;
-                        this.plantVisuals[row][col].setTexture('plants', PLANT_TEXTURE_KEY[textureKey]);
                     }
                 }
             }
@@ -631,8 +634,76 @@ class Grid {
         const speciesA = this.level3PlantCounts["Species A"];
         const speciesB = this.level3PlantCounts["Species B"];
         const speciesC = this.level3PlantCounts["Species C"];
-        if (speciesA >= 5 && speciesB >= 5 &&- speciesC >= 5) {
+        console.log(this.level3PlantCounts);
+        if (speciesA >= 5 && speciesB >= 5 && speciesC >= 5) {
             (this.scene as Play).handleWin();
         }
     }
+
+    public getNeighborCells(row: number, col: number): CellData[] {
+        const directions = [
+            { dRow: -1, dCol: 0 },  // Up
+            { dRow: 1, dCol: 0 },   // Down
+            { dRow: 0, dCol: -1 },  // Left
+            { dRow: 0, dCol: 1 },   // Right
+            { dRow: -1, dCol: -1 }, // Top-left diagonal
+            { dRow: -1, dCol: 1 },  // Top-right diagonal
+            { dRow: 1, dCol: -1 },  // Bottom-left diagonal
+            { dRow: 1, dCol: 1 }    // Bottom-right diagonal
+        ];
+    
+        return directions
+            .map(dir => {
+                const nRow = row + dir.dRow;
+                const nCol = col + dir.dCol;
+                if (nRow >= 0 && nRow < this.rows && nCol >= 0 && nCol < this.cols) {
+                    return this.getCellData(nRow, nCol); // Valid neighbor
+                }
+                return null; // Out of bounds
+            })
+            .filter(cell => cell !== null) as CellData[]; // Filter nulls and cast to CellData[]
+    }
 }
+
+export type CellData = {
+    sun: number;
+    water: number;
+    plantType: string;
+    growthLevel: string;
+};
+
+export type GrowthRule = (cell: CellData, grid: Grid, row: number, col: number) => boolean;
+
+export const PlantDSL = {
+    "Species A": {
+        // Rule: Grows if sun > 3 and water > 8
+        growthRules: [
+            (cell: CellData) => cell.sun > 3,
+            (cell: CellData) => cell.water > 8
+        ] as GrowthRule[]
+    },
+    "Species B": {
+        // Rule: Grows if sun <= 3 or has a neighboring plant
+        growthRules: [
+            (cell: CellData) => cell.sun <= 3,
+            (_cell: CellData, grid, row, col) => {
+                const neighbors = grid.getNeighborCells(row, col);
+                return neighbors.some(n => n.plantType !== "None");
+            }
+        ] as GrowthRule[]
+    },
+    "Species C": {
+        // Rule: Grows if water >= 5, sun >= 2, and no neighbors
+        growthRules: [
+            (cell: CellData) => cell.water >= 5 && cell.sun >= 2,
+            (_cell: CellData, grid, row, col) => {
+                const neighbors = grid.getNeighborCells(row, col);
+                return neighbors.every(n => n.plantType === "None");
+            }
+        ] as GrowthRule[]
+    }
+};
+
+console.log(PlantDSL["Species A"]);
+console.log(PlantDSL["Species B"]);
+console.log(PlantDSL["Species C"]);
