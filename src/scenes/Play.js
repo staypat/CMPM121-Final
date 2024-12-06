@@ -4,7 +4,7 @@ const NUM_COLS = 20;
 const CELL_SIZE = 40;
 const PLANT_TYPES = ["None", "Species A", "Species B", "Species C"];
 const GROWTH_LEVELS = ["N/A", "Level 1", "Level 2", "Level 3"];
-const PLANT_TEXTURE_KEY: { [key: string]: number } = {
+const PLANT_TEXTURE_KEY = {
     empty: 0,       // Empty patch
     seedling: 8,    // Shared 1st growth stage
     plant_a_2: 1,   // Plant A, 2nd growth stage
@@ -14,22 +14,22 @@ const PLANT_TEXTURE_KEY: { [key: string]: number } = {
     plant_c_2: 9,   // Plant C, 2nd growth stage
     plant_c_3: 10,  // Plant C, 3rd growth stage
 };
-let character: Phaser.GameObjects.Sprite;
+let character;
 const characterPosition = { row: 0, col: 0 };
-let cursors: Phaser.Types.Input.Keyboard.CursorKeys;
+let cursors;
 const MOVE_COOLDOWN = 250;
 let lastMoveTime = 0;
-let _nextTurnButton: Phaser.GameObjects.Text;
+let _nextTurnButton;
 let turnCounter = 0;
-let popupText: Phaser.GameObjects.Text | null = null;
-let activeCell: { sun: number; water: number; plantType: string; growthLevel: string } | null = null;
-const undoStack: { gridData: Uint8Array; characterPosition: { row: number; col: number } }[] = [];
-const redoStack: { gridData: Uint8Array; characterPosition: { row: number; col: number } }[] = [];
+let popupText = null;
+let activeCell = null;
+const undoStack = [];
+const redoStack = [];
 
 import * as yaml from 'js-yaml';
 export class Play extends Phaser.Scene {
-    private grid!: Grid;
-    private hasWon: boolean = false;
+    grid;
+    hasWon = false;
 
     constructor() {
         super("Play");
@@ -52,7 +52,11 @@ export class Play extends Phaser.Scene {
         // Initialize game state
         this.grid = new Grid(this, NUM_ROWS, NUM_COLS, CELL_SIZE);
         character = this.add.sprite(CELL_SIZE / 2, CELL_SIZE / 2, 'player').setScale(.1);
-        cursors = this.input.keyboard!.createCursorKeys();
+        if (this.input.keyboard) {
+            cursors = this.input.keyboard.createCursorKeys();
+        } else {
+            console.error('Keyboard input is not available.');
+        }
         const gridHeight = NUM_ROWS * CELL_SIZE;
         const totalGameHeight = this.scale.height;
         const blackHeight = totalGameHeight - gridHeight;
@@ -112,12 +116,14 @@ export class Play extends Phaser.Scene {
                     const undoState = undoStack.pop();
                     if (undoState) {
                         this.grid.loadSerializedData({
-                            gridData: Array.from(undoState!.gridData),
+                            gridData: Array.from(undoState?.gridData || []),
                             level3PlantCounts: this.grid.getLevel3PlantCounts()
                         });
                     }
-                    characterPosition.row = undoState!.characterPosition.row;
-                    characterPosition.col = undoState!.characterPosition.col;
+                    if (undoState) {
+                        characterPosition.row = undoState.characterPosition.row;
+                        characterPosition.col = undoState.characterPosition.col;
+                    }
                     character.x = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
                     character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
                 }
@@ -140,12 +146,14 @@ export class Play extends Phaser.Scene {
                     const redoState = redoStack.pop();
                     if (redoState) {
                         this.grid.loadSerializedData({
-                            gridData: Array.from(redoState!.gridData),
+                            gridData: Array.from(redoState?.gridData || []),
                             level3PlantCounts: this.grid.getLevel3PlantCounts()
                         });
                     }
-                    characterPosition.row = redoState!.characterPosition.row;
-                    characterPosition.col = redoState!.characterPosition.col;
+                    if (redoState) {
+                        characterPosition.row = redoState.characterPosition.row;
+                        characterPosition.col = redoState.characterPosition.col;
+                    }
                     character.x = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
                     character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
                 }
@@ -182,7 +190,7 @@ export class Play extends Phaser.Scene {
     }
 
 
-    override update(time: number) {
+    update(time) {
         // Only handle input if the cooldown period has expired and no tween is running
         let isMoving = false;
         if (time >= lastMoveTime + MOVE_COOLDOWN && !isMoving) {
@@ -236,7 +244,7 @@ export class Play extends Phaser.Scene {
         this.updatePopup();
     }
 
-    private updatePopup() {
+    updatePopup() {
         const currentCell = this.grid.getCellData(characterPosition.row, characterPosition.col);
         if (activeCell !== currentCell) {
             activeCell = currentCell;
@@ -254,13 +262,13 @@ export class Play extends Phaser.Scene {
         }
     }
 
-    private nextTurn() {
+    nextTurn() {
         turnCounter++;
         this.grid.advanceTime();
         this.autoSaveGame(); // Auto-save after each turn
     }
 
-    public handleWin() {
+    handleWin() {
         this.hasWon = true;
         localStorage.removeItem("AutoSave"); // Clear auto-save on win
         const centerX = this.scale.width / 2;
@@ -275,7 +283,7 @@ export class Play extends Phaser.Scene {
         _nextTurnButton.setText("Restart").on("pointerdown", () => this.scene.restart());
     }
 
-    private saveGame(slotName: string) {
+    saveGame(slotName) {
         const gameState = {
             gridData: this.grid.getSerializedData().gridData, // Save grid data
             characterPosition: { ...characterPosition },       // Save player position
@@ -296,7 +304,7 @@ export class Play extends Phaser.Scene {
         console.log(`Game saved to slot: ${slotName}`);
     }
 
-    private loadGame(slotName: string) {
+    loadGame(slotName) {
         const savedState = localStorage.getItem(slotName);
         if (!savedState) {
             console.error(`No save found in slot: ${slotName}`);
@@ -321,13 +329,13 @@ export class Play extends Phaser.Scene {
         // Restore undo/redo stacks
         undoStack.length = 0; // Clear existing stack
         redoStack.length = 0; // Clear existing stack
-        gameState.undoStack.forEach((state: { gridData: number[]; characterPosition: { row: number; col: number } }) => {
+        gameState.undoStack.forEach((state) => {
             undoStack.push({
                 gridData: Uint8Array.from(state.gridData),
                 characterPosition: { ...state.characterPosition },
             });
         });
-        gameState.redoStack.forEach((state: { gridData: number[]; characterPosition: { row: number; col: number } }) => {
+        gameState.redoStack.forEach((state) => {
             redoStack.push({
                 gridData: Uint8Array.from(state.gridData),
                 characterPosition: { ...state.characterPosition },
@@ -339,7 +347,7 @@ export class Play extends Phaser.Scene {
         console.log("Redo Stack:", redoStack);
     }
 
-    private addSaveLoadUI() {
+    addSaveLoadUI() {
         const buttonWidth = 120; // Width of each button
         const spacing = 10; // Space between buttons
         const yPosition = this.scale.height - 50; // Align horizontally with "Next Turn" button
@@ -408,7 +416,7 @@ export class Play extends Phaser.Scene {
             .on("pointerdown", () => this.loadGame("SaveSlot3"));
     }
 
-    private autoSaveGame() {
+    autoSaveGame() {
         const gameState = {
             gridData: this.grid.getSerializedData(),
             characterPosition,
@@ -419,7 +427,7 @@ export class Play extends Phaser.Scene {
         console.log("Game auto-saved.");
     }
 
-    private loadAutoSave() {
+    loadAutoSave() {
         const savedState = localStorage.getItem("AutoSave");
         if (!savedState) {
             console.error("No auto-save found.");
@@ -435,16 +443,16 @@ export class Play extends Phaser.Scene {
 }
 
 class Grid {
-    private scene: Phaser.Scene;
-    private rows: number;
-    private cols: number;
-    private cellSize: number;
-    private gridData: Uint8Array;
-    private cellVisuals: Phaser.GameObjects.Rectangle[][];
-    private plantVisuals: Phaser.GameObjects.Sprite[][];
-    private level3PlantCounts: { [key: string]: number };
+    scene;
+    rows;
+    cols;
+    cellSize;
+    gridData;
+    cellVisuals;
+    plantVisuals;
+    level3PlantCounts;
 
-    constructor(scene: Phaser.Scene, rows: number, cols: number, cellSize: number) {
+    constructor(scene, rows, cols, cellSize) {
         this.scene = scene;
         this.rows = rows;
         this.cols = cols;
@@ -458,7 +466,7 @@ class Grid {
     }
 
     // This method retrieves metadata for a specific cell
-    public getCellData(row: number, col: number): CellData {
+    getCellData(row, col) {
         const index = (row * this.cols + col) * 4;
         return {
             sun: this.gridData[index], // Sunlight value
@@ -469,7 +477,7 @@ class Grid {
     }
 
     // Serialize all grid data (used for saving and loading)
-    public getSerializedData() {
+    getSerializedData() {
         return {
             gridData: Array.from(this.gridData), // Convert Uint8Array to a regular array
             level3PlantCounts: this.level3PlantCounts,
@@ -477,7 +485,7 @@ class Grid {
     }
 
     // Load and apply serialized data to the grid
-    public loadSerializedData(gridState: { gridData: number[]; level3PlantCounts: { [key: string]: number } }) {
+    loadSerializedData(gridState) {
         this.gridData = Uint8Array.from(gridState.gridData); // Restore Uint8Array from the saved array
         this.level3PlantCounts = gridState.level3PlantCounts;
 
@@ -493,11 +501,11 @@ class Grid {
         }
     }
 
-    public getLevel3PlantCounts() {
+    getLevel3PlantCounts() {
         return this.level3PlantCounts;
     }
 
-    private initializeGrid() {
+    initializeGrid() {
         for (let row = 0; row < this.rows; row++) {
             for (let col = 0; col < this.cols; col++) {
                 const index = (row * this.cols + col) * 4;
@@ -509,10 +517,10 @@ class Grid {
         }
     }
 
-    private createGridVisuals() {
+    createGridVisuals() {
         for (let row = 0; row < this.rows; row++) {
-            const rowVisuals: Phaser.GameObjects.Rectangle[] = [];
-            const rowPlants: Phaser.GameObjects.Sprite[] = [];
+            const rowVisuals = [];
+            const rowPlants = [];
             for (let col = 0; col < this.cols; col++) {
                 const x = col * this.cellSize + this.cellSize / 2;
                 const y = row * this.cellSize + this.cellSize / 2;
@@ -548,7 +556,7 @@ class Grid {
         }
     }
 
-    public advanceTime() {
+    advanceTime() {
         this.pushUndoStack();
         for (let row = 0; row < this.rows; row++) {
             for (let col = 0; col < this.cols; col++) {
@@ -562,7 +570,7 @@ class Grid {
                 if (plantType === "None") continue;
 
                 // Retrieve growth rules for this plant type
-                const rules = PlantDSL[plantType as keyof typeof PlantDSL]?.growthRules;
+                const rules = PlantDSL[plantType]?.growthRules;
                 if (!rules || rules.length === 0) continue;
 
                 // Check if all growth rules are satisfied
@@ -590,7 +598,7 @@ class Grid {
     }
 
     // Push the current state to the undo stack
-    public pushUndoStack() {
+   pushUndoStack() {
         const currentState = {
             gridData: new Uint8Array(this.gridData), // Copy the current grid data
             characterPosition: { row: characterPosition.row, col: characterPosition.col }, // Current player position
@@ -613,34 +621,34 @@ class Grid {
         }
     }
 
-    private onCellClick(row: number, col: number) {
+    onCellClick(row, col) {
         console.log(`Clicked on cell (${row}, ${col})`);
     }
 
-    private isAdjacent(row: number, col: number): boolean {
+    isAdjacent(row, col) {
         const dRow = Math.abs(row - characterPosition.row);
         const dCol = Math.abs(col - characterPosition.col);
         return (dRow === 1 && dCol === 0) || (dRow === 0 && dCol === 1) || (dRow === 1 && dCol === 1) || (dRow === 0 && dCol === 0);
     }
 
-    private plantSeed(row: number, col: number, plantType: string) {
+    plantSeed(row , col , plantType) {
         const index = (row * this.cols + col) * 4;
         this.gridData[index + 2] = PLANT_TYPES.indexOf(plantType); // PlantType
         this.gridData[index + 3] = 1;                             // Growth Level 1
         this.plantVisuals[row][col].setTexture('plants', PLANT_TEXTURE_KEY['seedling']);
     }
 
-    private checkWinCondition() {
+    checkWinCondition() {
         const speciesA = this.level3PlantCounts["Species A"];
         const speciesB = this.level3PlantCounts["Species B"];
         const speciesC = this.level3PlantCounts["Species C"];
         console.log(this.level3PlantCounts);
         if (speciesA >= 5 && speciesB >= 5 && speciesC >= 5) {
-            (this.scene as Play).handleWin();
+            this.scene.handleWin();
         }
     }
 
-    public getNeighborCells(row: number, col: number): CellData[] {
+    getNeighborCells(row, col) {
         const directions = [
             { dRow: -1, dCol: 0 },  // Up
             { dRow: 1, dCol: 0 },   // Down
@@ -661,46 +669,49 @@ class Grid {
                 }
                 return null; // Out of bounds
             })
-            .filter(cell => cell !== null) as CellData[]; // Filter nulls and cast to CellData[]
+            .filter(cell => cell !== null); // Filter nulls
     }
 }
 
-export type CellData = {
-    sun: number;
-    water: number;
-    plantType: string;
-    growthLevel: string;
-};
+/**
+ * @typedef {Object} CellData
+ * @property {number} sun
+ * @property {number} water
+ * @property {string} plantType
+ * @property {string} growthLevel
+ */
 
-export type GrowthRule = (cell: CellData, grid: Grid, row: number, col: number) => boolean;
+/**
+ * @typedef {function(CellData, Grid, number, number): boolean} GrowthRule
+ */
 
 export const PlantDSL = {
     "Species A": {
         // Rule: Grows if sun > 3 and water > 8
         growthRules: [
-            (cell: CellData) => cell.sun > 3,
-            (cell: CellData) => cell.water > 8
-        ] as GrowthRule[]
+            (cell) => cell.sun > 3,
+            (cell) => cell.water > 8
+        ]
     },
     "Species B": {
         // Rule: Grows if sun <= 3 or has a neighboring plant
         growthRules: [
-            (cell: CellData) => cell.sun <= 3,
-            (_cell: CellData, grid, row, col) => {
+            (cell) => cell.sun <= 3,
+            (_cell, grid, row, col) => {
                 const neighbors = grid.getNeighborCells(row, col);
                 return neighbors.some(n => n.plantType !== "None");
             }
-        ] as GrowthRule[]
+        ]
     },
     "Species C": {
         // Rule: Grows if water >= 5, sun >= 2, and no neighbors
         growthRules: [
-            (cell: CellData) => cell.water >= 5 && cell.sun >= 2,
-            (_cell: CellData, grid, row, col) => {
+            (cell) => cell.water >= 5 && cell.sun >= 2,
+            (_cell, grid, row, col) => {
                 const neighbors = grid.getNeighborCells(row, col);
                 return neighbors.every(n => n.plantType === "None");
             }
-        ] as GrowthRule[]
+        ]
     }
 };
 
