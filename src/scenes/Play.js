@@ -35,10 +35,38 @@ export class Play extends Phaser.Scene {
         super("Play");
     }
 
+    // Step 2: Add setLanguage() method here
+    setLanguage(languageCode) {
+        const translations = this.cache.json.get(languageCode);
+        if (translations) {
+            this.localization = translations; // Update the translations
+            this.refreshTexts(); // Refresh the UI to show updates
+            console.log(`Language switched to: ${languageCode}`);
+        } else {
+            console.error(`Failed to load language: ${languageCode}`);
+        }
+    }
+
+    // Add the refreshTexts method (next section) here
+    refreshTexts() {
+        if (_nextTurnButton) _nextTurnButton.setText(this.localization.nextTurn || "Next Turn");
+        if (undoButton) undoButton.setText(this.localization.undo || "Undo");
+        if (redoButton) redoButton.setText(this.localization.redo || "Redo");
+
+        if (this.hasWon && winText) winText.setText(this.localization.winMessage || "You Win!");
+
+        if (popupText && activeCell) {
+            popupText.setText(
+                `${this.localization.popup?.sun || "Sun"}: ${activeCell.sun}, ${this.localization.popup?.water || "Water"}: ${activeCell.water}\n` +
+                `${this.localization.popup?.plant || "Plant"}: ${activeCell.plantType}, ${this.localization.popup?.growth || "Growth"}: ${activeCell.growthLevel}`
+            );
+        }
+    }
+
     preload() {
         //international languages
-        this.load.json('en', '/locales/en.json'); //english
-        this.load.json('es', '/locales/es.json'); //spanish
+        this.load.json('en', './assets/en.json'); //english
+        this.load.json('es', './assets/es.json'); //spanish
 
         this.load.spritesheet('plants', '/CMPM121-Final/assets/reap_sow_tilesheet.png', {
             frameWidth: CELL_SIZE * 10, // Width of each tile
@@ -52,6 +80,17 @@ export class Play extends Phaser.Scene {
 
 
     create() {
+        // Add key listeners for switching languages
+        this.input.keyboard.on('keydown-S', () => {
+            console.log("Switching to Spanish");
+            this.setLanguage('es'); // Call the setLanguage function to switch to Spanish
+        });
+
+        this.input.keyboard.on('keydown-E', () => {
+            console.log("Switching to English");
+            this.setLanguage('en'); // Call the setLanguage function to switch to English
+        });
+
         // Initialize game state
         this.grid = new Grid(this, NUM_ROWS, NUM_COLS, CELL_SIZE);
         character = this.add.sprite(CELL_SIZE / 2, CELL_SIZE / 2, 'player').setScale(.1);
