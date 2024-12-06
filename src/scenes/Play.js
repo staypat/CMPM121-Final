@@ -61,6 +61,9 @@ export class Play extends Phaser.Scene {
         // Refresh Auto-Save message
         this.refreshAutoSaveMessage();
 
+        // Refresh popup text (recreates the popup with updated language)
+        this.updatePopup();
+
         // If the player has won, translate the win text
         if (this.hasWon && winText) {
             winText.setText(this.localization.winMessage || "You Win!");
@@ -311,13 +314,30 @@ export class Play extends Phaser.Scene {
 
     updatePopup() {
         const currentCell = this.grid.getCellData(characterPosition.row, characterPosition.col);
+    
+        // Only proceed if the active cell changes
         if (activeCell !== currentCell) {
-            activeCell = currentCell;
+            activeCell = currentCell; // Update the tracked cell
+    
+            // Destroy the existing popup text, if any
             if (popupText) popupText.destroy();
+    
+            // Use localized popup text for each field
+            const popupLocalization = this.localization?.popup || {
+                sun: "Sun",
+                water: "Water",
+                plant: "Plant",
+                growth: "Growth",
+            };
+    
+            // Generate the translated popup text
             popupText = this.add.text(
-                character.x + CELL_SIZE / 2,
-                character.y - CELL_SIZE / 2,
-                `Sun: ${currentCell.sun}, Water: ${currentCell.water}\nPlant: ${currentCell.plantType}, Growth: ${currentCell.growthLevel}`,
+                character.x + CELL_SIZE / 2, // Position right of the character
+                character.y - CELL_SIZE / 2, // Position above the character
+                `${popupLocalization.sun}: ${currentCell.sun}, ` +
+                `${popupLocalization.water}: ${currentCell.water}\n` +
+                `${popupLocalization.plant}: ${currentCell.plantType}, ` +
+                `${popupLocalization.growth}: ${currentCell.growthLevel}`,
                 {
                     font: "16px Arial",
                     color: "#ffffff",
