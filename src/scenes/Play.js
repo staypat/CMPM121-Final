@@ -26,6 +26,8 @@ let activeCell = null;
 const undoStack = [];
 const redoStack = [];
 
+let undoButton, redoButton;
+
 import * as yaml from 'js-yaml';
 export class Play extends Phaser.Scene {
     grid;
@@ -39,8 +41,8 @@ export class Play extends Phaser.Scene {
     setLanguage(languageCode) {
         const translations = this.cache.json.get(languageCode);
         if (translations) {
-            this.localization = translations; // Update the translations
-            this.refreshTexts(); // Refresh the UI to show updates
+            this.localization = translations; // Update the localization object
+            this.refreshTexts();            // Update all the text
             console.log(`Language switched to: ${languageCode}`);
         } else {
             console.error(`Failed to load language: ${languageCode}`);
@@ -52,9 +54,11 @@ export class Play extends Phaser.Scene {
         if (_nextTurnButton) _nextTurnButton.setText(this.localization.nextTurn || "Next Turn");
         if (undoButton) undoButton.setText(this.localization.undo || "Undo");
         if (redoButton) redoButton.setText(this.localization.redo || "Redo");
-
+    
+        // Win message
         if (this.hasWon && winText) winText.setText(this.localization.winMessage || "You Win!");
-
+    
+        // Popup text
         if (popupText && activeCell) {
             popupText.setText(
                 `${this.localization.popup?.sun || "Sun"}: ${activeCell.sun}, ${this.localization.popup?.water || "Water"}: ${activeCell.water}\n` +
@@ -142,7 +146,7 @@ export class Play extends Phaser.Scene {
             .on("pointerdown", () => this.nextTurn());
 
         // Add undo button
-        this.add.text(centerX - 100, centerY, "Undo", {
+        undoButton = this.add.text(centerX - 100, centerY, "Undo", {
             font: "20px Arial",
             backgroundColor: "#ff0000",
             padding: { x: 10, y: 10 },
@@ -172,7 +176,7 @@ export class Play extends Phaser.Scene {
             });
 
         // Add redo button
-        this.add.text(centerX + 100, centerY, "Redo", {
+        redoButton = this.add.text(centerX + 100, centerY, "Redo", {
             font: "20px Arial",
             backgroundColor: "#00ff00",
             padding: { x: 10, y: 10 },
