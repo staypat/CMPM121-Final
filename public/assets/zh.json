@@ -1,0 +1,16 @@
+{
+    "nextTurn": "下一步",
+    "undo": "撤销",
+    "redo": "重做",
+    "winMessage": "你赢了！",
+    "saveSlot": "保存槽 {slot}",
+    "loadSlot": "加载槽 {slot}",
+    "autoSaveMessage": "从上次自动保存继续？",
+    "popup": {
+      "sun": "太阳",
+      "water": "水",
+      "plant": "植物",
+      "growth": "生长"
+    }
+  }
+  

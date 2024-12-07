@@ -25,6 +25,7 @@ let popupText = null;
 let activeCell = null;
 const undoStack = [];
 const redoStack = [];
+let currentLanguage = 'en'; // Default language is English
 
 let undoButton, redoButton;
 
@@ -88,7 +89,8 @@ export class Play extends Phaser.Scene {
     preload() {
         //international languages
         this.load.json('en', './assets/en.json'); //english
-        this.load.json('es', './assets/es.json'); //spanish
+        this.load.json('zh', './assets/zh.json'); //chinese
+        this.load.json('ar', './assets/ar.json'); //arabic
 
         this.load.spritesheet('plants', '/CMPM121-Final/assets/reap_sow_tilesheet.png', {
             frameWidth: CELL_SIZE * 10, // Width of each tile
@@ -103,14 +105,18 @@ export class Play extends Phaser.Scene {
 
     create() {
         // Add key listeners for switching languages
-        this.input.keyboard.on('keydown-S', () => {
-            console.log("Switching to Spanish");
-            this.setLanguage('es'); // Call the setLanguage function to switch to Spanish
-        });
-
-        this.input.keyboard.on('keydown-E', () => {
-            console.log("Switching to English");
-            this.setLanguage('en'); // Call the setLanguage function to switch to English
+        this.input.keyboard.on('keydown-L', () => {
+            // cycle through languages
+            if (currentLanguage === 'en') {
+                currentLanguage = 'zh';
+                this.setLanguage('zh');
+            } else if (currentLanguage === 'zh') {
+                currentLanguage = 'ar';
+                this.setLanguage('ar');
+            } else {
+                currentLanguage = 'en';
+                this.setLanguage('en');
+            }
         });
 
         // Initialize game state
@@ -255,6 +261,7 @@ export class Play extends Phaser.Scene {
         globalThis.addEventListener('beforeunload', () => {
             this.autoSaveGame();
         });
+        this.setLanguage('en');
     }
 
 

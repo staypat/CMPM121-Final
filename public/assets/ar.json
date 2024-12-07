@@ -1,0 +1,16 @@
+{
+    "nextTurn": "الدور التالي",
+    "undo": "تراجع",
+    "redo": "إعادة",
+    "winMessage": "لقد فزت!",
+    "saveSlot": "حفظ الفتحة {slot}",
+    "loadSlot": "تحميل الفتحة {slot}",
+    "autoSaveMessage": "هل تريد المتابعة من آخر حفظ تلقائي؟",
+    "popup": {
+      "sun": "شمس",
+      "water": "ماء",
+      "plant": "نبات",
+      "growth": "نمو"
+    }
+  }
+  
