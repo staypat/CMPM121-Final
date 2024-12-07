@@ -181,11 +181,11 @@ export class Play extends Phaser.Scene {
             .setInteractive()
             .on("pointerdown", () => {
                 if (undoStack.length != 0) {
+                    const undoState = undoStack.pop();
                     redoStack.push({
                         gridData: new Uint8Array(this.grid.getSerializedData().gridData),
                         characterPosition: { row: characterPosition.row, col: characterPosition.col },
                     });
-                    const undoState = undoStack.pop();
                     if (undoState) {
                         this.grid.loadSerializedData({
                             gridData: Array.from(undoState?.gridData || []),
@@ -276,26 +276,26 @@ export class Play extends Phaser.Scene {
     
             // Handle player movement inputs
             if (cursors.up.isDown && characterPosition.row > 0) {
+                this.grid.pushUndoStack();
                 characterPosition.row--;
                 hasMoved = true;
             } else if (cursors.down.isDown && characterPosition.row < NUM_ROWS - 1) {
+                this.grid.pushUndoStack();
                 characterPosition.row++;
                 hasMoved = true;
             } else if (cursors.left.isDown && characterPosition.col > 0) {
+                this.grid.pushUndoStack();
                 characterPosition.col--;
                 character.flipX = true;
                 hasMoved = true;
             } else if (cursors.right.isDown && characterPosition.col < NUM_COLS - 1) {
+                this.grid.pushUndoStack();
                 characterPosition.col++;
                 character.flipX = false;
                 hasMoved = true;
             }
     
-            if (hasMoved) {
-                // Push move to undo stack
-                this.grid.pushUndoStack();
-                console.log("Player Moved. Undo Stack and Redo Stack Updated.");
-    
+            if (hasMoved) {    
                 // Lock movement and set cooldown
                 isMoving = true; // Custom property to lock movement
                 lastMoveTime = time;
@@ -659,7 +659,6 @@ class Grid {
                     const cellData = this.getCellData(row, col);
                     if (cellData.plantType === PLANT_TYPES[0] && this.isAdjacent(row, col)) {
                         this.plantSeed(row, col, PLANT_TYPES[Phaser.Math.Between(1, PLANT_TYPES.length - 1)]);
-                        this.pushUndoStack();
                     } else if (cellData.plantType !== PLANT_TYPES[0] && cellData.growthLevel === GROWTH_LEVELS[3] && this.isAdjacent(row, col)) {
                         const index = (row * this.cols + col) * 4;
                         this.gridData[index + 2] = 0
@@ -754,6 +753,7 @@ class Grid {
     }
 
     plantSeed(row , col , plantType) {
+        this.pushUndoStack();
         const index = (row * this.cols + col) * 4;
         this.gridData[index + 2] = PLANT_TYPES.indexOf(plantType); // PlantType
         this.gridData[index + 3] = 1;                             // Growth Level 1
