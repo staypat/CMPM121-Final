@@ -608,16 +608,36 @@ class Grid {
 
     // Load and apply serialized data to the grid
     loadSerializedData(gridState) {
-        this.gridData = Uint8Array.from(gridState.gridData); // Restore Uint8Array from the saved array
+        this.gridData = Uint8Array.from(gridState.gridData);
         this.level3PlantCounts = gridState.level3PlantCounts;
-
+    
         // Update visuals to reflect the restored data
         for (let row = 0; row < this.rows; row++) {
             for (let col = 0; col < this.cols; col++) {
-                // Update visual texture based on growth level
-                const growthLevel = this.getCellData(row, col).growthLevel;
-                const plantType = this.getCellData(row, col).plantType;
-                const textureKey = `plant_${plantType.slice(-1).toLowerCase()}_${growthLevel.slice(-1)}`;
+                const index = (row * this.cols + col) * 4;
+    
+                const plantTypeIndex = this.gridData[index + 2];
+                const growthLevelIndex = this.gridData[index + 3];
+    
+                // Validate indices
+                if (plantTypeIndex < 0 || plantTypeIndex >= PLANT_TYPES.length) continue; // Skip invalid types
+                const plantType = PLANT_TYPES[plantTypeIndex];
+    
+                if (growthLevelIndex < 0 || growthLevelIndex >= GROWTH_LEVELS.length) continue; // Skip invalid levels
+                const growthLevel = GROWTH_LEVELS[growthLevelIndex];
+    
+                let textureKey;
+                if (plantType === "None" || growthLevel === "N/A") {
+                    textureKey = 'empty'; // No plant
+                } else if (growthLevel === "Level 1") {
+                    textureKey = 'seedling'; // Any species at Level 1
+                } else if (growthLevel === "Level 2") {
+                    textureKey = `plant_${plantType.slice(-1).toLowerCase()}_2`; // Specific species for Level 2
+                } else { // Level 3
+                    textureKey = `plant_${plantType.slice(-1).toLowerCase()}_3`; // Specific species for Level 3
+                }
+    
+                // Set the visual based on the restored state
                 this.plantVisuals[row][col].setTexture('plants', PLANT_TEXTURE_KEY[textureKey]);
             }
         }
