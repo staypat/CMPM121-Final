@@ -2,8 +2,8 @@
 const NUM_ROWS = 12;
 const NUM_COLS = 20;
 const CELL_SIZE = 40;
-const PLANT_TYPES = ["None", "Species A", "Species B", "Species C"];
-const GROWTH_LEVELS = ["N/A", "Level 1", "Level 2", "Level 3"];
+let PLANT_TYPES = ["None", "Species A", "Species B", "Species C"];
+let GROWTH_LEVELS = ["N/A", "Level 1", "Level 2", "Level 3"];
 const PLANT_TEXTURE_KEY = {
     empty: 0,       // Empty patch
     seedling: 8,    // Shared 1st growth stage
@@ -44,6 +44,8 @@ export class Play extends Phaser.Scene {
         if (translations) {
             this.localization = translations; // Update the localization object
             this.refreshTexts();            // Update all the text
+            PLANT_TYPES = translations.plantTypes || PLANT_TYPES;
+            GROWTH_LEVELS = translations.growthLevels || GROWTH_LEVELS;
             console.log(`Language switched to: ${languageCode}`);
         } else {
             console.error(`Failed to load language: ${languageCode}`);
