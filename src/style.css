@@ -58,7 +58,17 @@ button {
 #savesButtonContainer button {
     flex: 1; /* Make all buttons grow equally */
     width: 90%;
-    max-height: calc((600px - 80px) / 7);
+    max-height: calc((600px - 80px) / 8);
+}
+
+.language-dropdown {
+    width: 90%; /* Match the width of the buttons */
+    padding: 10px; /* Add padding for better appearance */
+    border-radius: 5px; /* Rounded corners */
+    border: 1px solid #ccc; /* Light border */
+    background-color: white; /* Background color */
+    color: black; /* Text color */
+    box-sizing: border-box; /* Include padding and border in total width */
 }
 
 #stats {

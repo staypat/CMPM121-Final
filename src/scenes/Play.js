@@ -36,7 +36,6 @@ export class Play extends Phaser.Scene {
         super("Play");
     }
 
-    // Step 2: Add setLanguage() method here
     setLanguage(languageCode) {
         const translations = this.cache.json.get(languageCode);
         if (translations) {
@@ -48,6 +47,14 @@ export class Play extends Phaser.Scene {
         } else {
             console.error(`Failed to load language: ${languageCode}`);
         }
+    }
+
+    changeLanguage() {
+        const languageSelector = document.getElementById('language');
+        const selectedLanguage = languageSelector.value; // Get selected value
+
+        this.setLanguage(selectedLanguage); // Set the new language
+        this.refreshTexts(); // Refresh all text elements based on the new language
     }
 
     // Add the refreshTexts method (next section) here
@@ -101,6 +108,7 @@ export class Play extends Phaser.Scene {
     preload() {
         //international languages
         this.load.json('en', './assets/en.json'); //english
+        this.load.json('es', './assets/es.json'); //spanish
         this.load.json('zh', './assets/zh.json'); //chinese
         this.load.json('ar', './assets/ar.json'); //arabic
 
@@ -116,19 +124,10 @@ export class Play extends Phaser.Scene {
 
 
     create() {
-        // Add key listeners for switching languages
-        this.input.keyboard.on('keydown-L', () => {
-            // cycle through languages
-            if (currentLanguage === 'en') {
-                currentLanguage = 'zh';
-                this.setLanguage('zh');
-            } else if (currentLanguage === 'zh') {
-                currentLanguage = 'ar';
-                this.setLanguage('ar');
-            } else {
-                currentLanguage = 'en';
-                this.setLanguage('en');
-            }
+        // change language
+        const languageSelector = document.getElementById('language');
+        languageSelector.addEventListener('change', () => {
+            this.changeLanguage(); // Call the changeLanguage method
         });
 
         // Initialize game state
