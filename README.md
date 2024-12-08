@@ -1,4 +1,24 @@
 # CMPM121-Final
+# Devlog Entry - [12/6/2024]
+## How we satisfied the software requirements
+### F0+F1+F2
+No major changes were made.
+
+### Internationalization
+We added JSON files for English, Chinese, Arabic, and Spanish that were defined by all English phrases in our game translated into their respective language. We created a function refreshTexts() that changes all the text to a specified language by calling a reference to the JSON file and finding the translation for the text. In order to support a new language or add a new translatable message to the game, the user should create a JSON file with the translations needed for the language and the functions we created will parse this information.
+
+### Localization
+For Chinese, Arabic, and Spanish, we asked Brace "Can you translate these phrases to X language?" and cross-checked with Google Translate to make sure they were somewhat consistent with the message we wanted to display in a different language. The player is given a dropdown to select which language they want to play in.
+
+### Mobile Installation
+We followed the [Installable PWA example](https://canvas.ucsc.edu/courses/76391/discussion_topics/647812) provided on Canvas and we were able to add our game to our mobile devices after visiting the website and clicking "Add to home screen". In order to make the game installable, we had to use a manifest.json file to define download behaviors.
+
+### Mobile Play (Offline)
+We had to change our style.css to allow the player game size to be consistent across all devices. This was done by scaling using percentages instead of px values. For offline use, it worked with no changes to the manifest.json file.
+
+## Reflection
+During the F3 development process, we made an overhaul to how we delivered information to the player. We decided to add new divs to place our save/load buttons, undo/redo buttons, and turn advance buttons. One of the new divs was also used to display grid cell information to the player rather than the information being placed next to the character in-game because that was visual clutter.
+
 # Devlog Entry - [12/2/2024]
 ## How we satisfied the software requirements
 ### F0+F1
