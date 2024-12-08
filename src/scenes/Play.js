@@ -290,10 +290,15 @@ export class Play extends Phaser.Scene {
         this.hasWon = true;
         localStorage.removeItem("AutoSave"); // Clear auto-save on win
     
-        // Create a div for the win message
+        // Create container for win message and restart button
+        const gameView = document.getElementById('gameView'); // Get the gameView div
+        const winContainer = document.createElement("div");
+        winContainer.className = 'win-container';
+    
+        // Create win message
         const winMessage = document.createElement("div");
         winMessage.innerText = this.localization.winMessage || "You Win!"; // Localized win message
-        winMessage.className = 'win-screen';
+        winContainer.appendChild(winMessage); // Add win message to container
     
         // Create a Restart button
         const restartButton = document.createElement("button");
@@ -301,12 +306,15 @@ export class Play extends Phaser.Scene {
         restartButton.className = 'restart-button'; // Class for styling
         restartButton.onclick = () => {
             this.scene.restart(); // Restart the game when clicked
-            winMessage.remove(); // Remove message after action
+            winContainer.remove(); // Remove the win container after action
         };
     
-        // Append the message and button to the body or specific container
-        document.body.appendChild(winMessage);
-        winMessage.appendChild(restartButton);
+        // Append the restart button to the win container
+        winContainer.appendChild(restartButton);
+        
+        // Append the winContainer to the gameView div
+        
+        gameView.appendChild(winContainer); // Add the win container to the game view
     }
 
     saveGame(slotName) {
@@ -375,7 +383,8 @@ export class Play extends Phaser.Scene {
 
     addSaveLoadUI() {
         // Get the savesButtonContainer
-        const buttonContainer = document.getElementById('savesButtonContainer');
+        const lsbuttonContainer = document.getElementById('savesButtonContainer');
+        const actionsbuttonContainer = document.getElementById('actions');
     
         // Track Save/Load buttons for translation
         this.saveLoadButtons = [];
@@ -385,42 +394,42 @@ export class Play extends Phaser.Scene {
         saveSlot1Button.innerText = "Save Slot 1";
         saveSlot1Button.className = 'save-button1';
         saveSlot1Button.onclick = () => this.saveGame("SaveSlot1");
-        buttonContainer.appendChild(saveSlot1Button);
+        lsbuttonContainer.appendChild(saveSlot1Button);
     
         // Load Slot 1 Button
         const loadSlot1Button = document.createElement("button");
         loadSlot1Button.innerText = "Load Slot 1";
         loadSlot1Button.className = 'load-button1';
         loadSlot1Button.onclick = () => this.loadGame("SaveSlot1");
-        buttonContainer.appendChild(loadSlot1Button);
+        lsbuttonContainer.appendChild(loadSlot1Button);
     
         // Save Slot 2 Button
         const saveSlot2Button = document.createElement("button");
         saveSlot2Button.innerText = "Save Slot 2";
         saveSlot2Button.className = 'save-button2';
         saveSlot2Button.onclick = () => this.saveGame("SaveSlot2");
-        buttonContainer.appendChild(saveSlot2Button);
+        lsbuttonContainer.appendChild(saveSlot2Button);
     
         // Load Slot 2 Button
         const loadSlot2Button = document.createElement("button");
         loadSlot2Button.innerText = "Load Slot 2";
         loadSlot2Button.className = 'load-button2';
         loadSlot2Button.onclick = () => this.loadGame("SaveSlot2");
-        buttonContainer.appendChild(loadSlot2Button);
+        lsbuttonContainer.appendChild(loadSlot2Button);
     
         // Save Slot 3 Button
         const saveSlot3Button = document.createElement("button");
         saveSlot3Button.innerText = "Save Slot 3";
         saveSlot3Button.className = 'save-button3';
         saveSlot3Button.onclick = () => this.saveGame("SaveSlot3");
-        buttonContainer.appendChild(saveSlot3Button);
+        lsbuttonContainer.appendChild(saveSlot3Button);
     
         // Load Slot 3 Button
         const loadSlot3Button = document.createElement("button");
         loadSlot3Button.innerText = "Load Slot 3";
         loadSlot3Button.className = 'load-button3';
         loadSlot3Button.onclick = () => this.loadGame("SaveSlot3");
-        buttonContainer.appendChild(loadSlot3Button);
+        lsbuttonContainer.appendChild(loadSlot3Button);
 
         // Add undo button
         const undoButton = document.createElement("button");
@@ -447,14 +456,14 @@ export class Play extends Phaser.Scene {
                 character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
             }
         };
-        buttonContainer.appendChild(undoButton);
+        actionsbuttonContainer.appendChild(undoButton);
         
         // Add Next Turn Button
         const nextTurnButton = document.createElement("button");
         nextTurnButton.innerText = "Next Turn";
         nextTurnButton.className = 'next-turn-button';
         nextTurnButton.onclick = () => this.nextTurn();
-        buttonContainer.appendChild(nextTurnButton);
+        actionsbuttonContainer.appendChild(nextTurnButton);
 
         // Add Redo Button
         const redoButton = document.createElement("button");
@@ -481,7 +490,7 @@ export class Play extends Phaser.Scene {
                 character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
             }
         };
-        buttonContainer.appendChild(redoButton);
+        actionsbuttonContainer.appendChild(redoButton);
 
         // You can add more button styles or classes as needed here.
         this.refreshSaveLoadButtonsText();
@@ -498,7 +507,7 @@ export class Play extends Phaser.Scene {
                 autoSaveButton.remove(); // Remove the button after action
             };
 
-            buttonContainer.appendChild(autoSaveButton);
+            lsbuttonContainer.appendChild(autoSaveButton);
         }
     }
 
