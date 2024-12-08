@@ -13,5 +13,6 @@
       "growth": "Growth"
   },
   "plantTypes": ["None", "Species A", "Species B", "Species C"],
-  "growthLevels": ["Unavailable", "Level 1", "Level 2", "Level 3"]
+  "growthLevels": ["Unavailable", "Level 1", "Level 2", "Level 3"],
+  "restart": "Restart"
 }

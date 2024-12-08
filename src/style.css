@@ -5,11 +5,13 @@ body, html {
     display: flex;
     justify-content: center; /* Centers horizontally */
     align-items: center;    /* Centers vertically */
+    background-color: black;
 }
 
 #app {
     display: flex;
     flex-direction: column; /* Stacks #gameWrapper and #saves vertically */
+    border: 2px solid white;
 }
   
 #gameWrapper {
@@ -21,24 +23,58 @@ body, html {
 #gameView {
     width: 800px;
     height: 600px;
-    background-color: orange; /* Example background */
-}
-
-#stats {
-    width: 200px;
-    height: 600px;
-    background-color: red; /* Example background */
+    background-color: #10131b; /* Example background */
+    position: relative;
+    border: 2px solid white;
 }
 
 #saves {
-    width: 1000px; /* Matches the width of the top section */
-    height: 100px; /* Adjust as needed */
-    background-color: yellow; /* Example background */
+    width: 300px;
+    height: 600px;
+    border: 2px solid white;
+}
+
+#buttonsWrapper {
+    display: flex;
+    flex-direction: row; /* Change to row to align children horizontally */
+    align-items: center; /* Centers content vertically if needed */
 }
 
 #savesButtonContainer {
-    width: 800px;
+    width: 300px;
+    height: 600px; /* Adjust as needed */
+    background-color: #10131b; /* Example background */
+}
+
+#stats {
+    width: 800px; /* Matches the width of the top section */
     height: 100px; /* Adjust as needed */
-    background-color: rgb(255, 0, 149); /* Example background */
+    background-color: #10131b; /* Example background */
+    border: 2px solid white;
+}
+
+#actions {
+    width: 300px; /* Matches the width of the top section */
+    height: 100px; /* Adjust as needed */
+    background-color: #10131b; /* Example background */
+    border: 2px solid white;
+}
+
+.win-container {
+    position: absolute; /* Absolute position to allow centering */
+    left: 50%; /* Center horizontally */
+    top: 50%; /* Center vertically */
+    transform: translate(-50%, -50%); /* Shift to center */
+    text-align: center; /* Center text inside the container */
+    color: #ffffff; /* Text color */
+    background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
+    padding: 20px; /* Padding */
+    border-radius: 5px; /* Rounded corners */
+    z-index: 10; /* Ensure it appears on top */
+    
+}
+
+.win-container button {
+    margin-top: 10px;
 }
   
