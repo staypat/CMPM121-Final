@@ -838,13 +838,13 @@ export const PlantDSL = {
             }
         ]
     },
-    "النوع أ": {
+    "النوع A": {
         growthRules: [
             (cell) => cell.sun > 3,
             (cell) => cell.water > 8
         ]
     },
-    "النوع ب": {
+    "النوع B": {
         growthRules: [
             (cell) => cell.sun <= 3,
             (_cell, grid, row, col) => {
@@ -853,7 +853,7 @@ export const PlantDSL = {
             }
         ]
     },
-    "النوع ج": {
+    "النوع C": {
         growthRules: [
             (cell) => cell.water >= 5 && cell.sun >= 2,
             (_cell, grid, row, col) => {
