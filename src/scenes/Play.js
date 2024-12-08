@@ -851,6 +851,55 @@ export const PlantDSL = {
                 return neighbors.every(n => n.plantType === "None");
             }
         ]
+    },
+    "النوع A": {
+        growthRules: [
+            (cell) => cell.sun > 3,
+            (cell) => cell.water > 8
+        ]
+    },
+    "النوع B": {
+        growthRules: [
+            (cell) => cell.sun <= 3,
+            (_cell, grid, row, col) => {
+                const neighbors = grid.getNeighborCells(row, col);
+                return neighbors.some(n => n.plantType !== PLANT_TYPES[0]);
+            }
+        ]
+    },
+    "النوع C": {
+        growthRules: [
+            (cell) => cell.water >= 5 && cell.sun >= 2,
+            (_cell, grid, row, col) => {
+                const neighbors = grid.getNeighborCells(row, col);
+                return neighbors.every(n => n.plantType === PLANT_TYPES[0]);
+            }
+        ]
+    },
+    // repeat growth rules for the chinese localization
+    "物种A": {
+        growthRules: [
+            (cell) => cell.sun > 3,
+            (cell) => cell.water > 8
+        ]
+    },
+    "物种B": {
+        growthRules: [
+            (cell) => cell.sun <= 3,
+            (_cell, grid, row, col) => {
+                const neighbors = grid.getNeighborCells(row, col);
+                return neighbors.some(n => n.plantType !== PLANT_TYPES[0]);
+            }
+        ]
+    },
+    "物种C": {
+        growthRules: [
+            (cell) => cell.water >= 5 && cell.sun >= 2,
+            (_cell, grid, row, col) => {
+                const neighbors = grid.getNeighborCells(row, col);
+                return neighbors.every(n => n.plantType === PLANT_TYPES[0]);
+            }
+        ]
     }
 };
 
