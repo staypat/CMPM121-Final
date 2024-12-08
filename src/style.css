@@ -1,7 +1,6 @@
 /* General styling */
 body, html {
     margin: 0;
-    height: 100%; /* Ensure body takes full height */
     display: flex;
     justify-content: center; /* Centers horizontally */
     align-items: center;    /* Centers vertically */
@@ -13,6 +12,8 @@ button {
 }
 
 #app {
+    width: 100%;
+    height:100%;
     display: flex;
     flex-direction: column; /* Stacks #gameWrapper and #saves vertically */
     border: 2px solid white;
@@ -25,16 +26,21 @@ button {
 }
 
 #gameView {
-    width: 800px;
-    height: 600px;
+    width: 100%;
+    height: 100%;
+    max-width: 800px;
+    max-height: 600px;
     background-color: #10131b; /* Example background */
     position: relative;
     border: 2px solid white;
 }
 
 #saves {
-    width: 300px;
-    height: 600px;
+    width: 100%;
+    height: 100%;
+    max-width: 300px;
+    max-height: 600px;
+    position: relative;
     border: 2px solid white;
 }
 
@@ -45,8 +51,11 @@ button {
 }
 
 #savesButtonContainer {
+    width: 100%;
+    height: 100%;
     width: 300px;
-    height: 600px; /* Adjust as needed */
+    height: 600px;
+    position: relative;
     background-color: #10131b; /* Example background */
     display: flex; /* Enable flexbox layout */
     flex-direction: column; /* Stack children vertically */
@@ -72,15 +81,21 @@ button {
 }
 
 #stats {
-    width: 800px; /* Matches the width of the top section */
-    height: 100px; /* Adjust as needed */
+    width: 100%;
+    height: 100%;
+    width: 800px;
+    height: 100px;
+    position: relative;
     background-color: #10131b; /* Example background */
     border: 2px solid white;
 }
 
 #actions {
-    width: 300px;  /* Fixed width */
-    height: 100px; /* Fixed height */
+    width: 100%;
+    height: 100%;
+    width: 300px;
+    height: 100px;
+    position: relative;
     display: flex; /* Enable flexbox for this container */
     border: 2px solid white; /* Optional: for visual reference */
 }
