@@ -5,11 +5,13 @@ body, html {
     display: flex;
     justify-content: center; /* Centers horizontally */
     align-items: center;    /* Centers vertically */
+    background-color: black;
 }
 
 #app {
     display: flex;
     flex-direction: column; /* Stacks #gameWrapper and #saves vertically */
+    border: 2px solid white;
 }
   
 #gameWrapper {
@@ -21,14 +23,15 @@ body, html {
 #gameView {
     width: 800px;
     height: 600px;
-    background-color: orange; /* Example background */
+    background-color: #10131b; /* Example background */
     position: relative;
+    border: 2px solid white;
 }
 
 #saves {
-    width: 200px;
+    width: 300px;
     height: 600px;
-    background-color: red; /* Example background */
+    border: 2px solid white;
 }
 
 #buttonsWrapper {
@@ -40,19 +43,21 @@ body, html {
 #savesButtonContainer {
     width: 300px;
     height: 600px; /* Adjust as needed */
-    background-color: rgb(255, 0, 149); /* Example background */
+    background-color: #10131b; /* Example background */
 }
 
 #stats {
     width: 800px; /* Matches the width of the top section */
     height: 100px; /* Adjust as needed */
-    background-color: yellow; /* Example background */
+    background-color: #10131b; /* Example background */
+    border: 2px solid white;
 }
 
 #actions {
     width: 300px; /* Matches the width of the top section */
     height: 100px; /* Adjust as needed */
-    background-color: blue; /* Example background */
+    background-color: #10131b; /* Example background */
+    border: 2px solid white;
 }
 
 .win-container {
