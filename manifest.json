@@ -2,11 +2,11 @@
     "name": "Space Plants Mobile Game",
     "short_name": "Space Plants",
     "description": "A mobile game where you grow plants in space.",
-    "start_url": "/index.html",
+    "start_url": "/CMPM121-Final",
     "display": "fullscreen",
     "icons": [
         {
-            "src": "public/assets/astronaut.png",
+            "src": "https://raw.githubusercontent.com/staypat/CMPM121-Final/refs/heads/main/public/assets/astronaut.png",
             "sizes": "180x180"
         }
     ]
