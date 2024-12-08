@@ -610,11 +610,11 @@ class Grid {
                 const growthLevel = GROWTH_LEVELS[growthLevelIndex];
     
                 let textureKey;
-                if (plantType === "None" || growthLevel === "N/A") {
+                if (plantType === PLANT_TYPES[0] || growthLevel === GROWTH_LEVELS[0]) {
                     textureKey = 'empty'; // No plant
-                } else if (growthLevel === "Level 1") {
+                } else if (growthLevel === GROWTH_LEVELS[1]) {
                     textureKey = 'seedling'; // Any species at Level 1
-                } else if (growthLevel === "Level 2") {
+                } else if (growthLevel === GTOOTH_LEVELS[2]) {
                     textureKey = `plant_${plantType.slice(-1).toLowerCase()}_2`; // Specific species for Level 2
                 } else { // Level 3
                     textureKey = `plant_${plantType.slice(-1).toLowerCase()}_3`; // Specific species for Level 3
@@ -691,7 +691,7 @@ class Grid {
                 const plantType = cellData.plantType;
 
                 // Skip empty cells
-                if (plantType === "None") continue;
+                if (plantType === PLANT_TYPES[0]) continue;
 
                 // Retrieve growth rules for this plant type
                 const rules = PlantDSL[plantType]?.growthRules;
@@ -700,7 +700,7 @@ class Grid {
                 // Check if all growth rules are satisfied
                 const satisfiesRules = rules.every(rule => rule(cellData, this, row, col));
 
-                if (satisfiesRules && cellData.growthLevel !== "Level 3") {
+                if (satisfiesRules && cellData.growthLevel !== GROWTH_LEVELS[3]) {
                     // Increment growth level
                     this.gridData[index + 3]++;
     
@@ -712,7 +712,7 @@ class Grid {
                     this.plantVisuals[row][col].setTexture('plants', PLANT_TEXTURE_KEY[textureKey]);
     
                     // Update Level 3 counts if applicable
-                    if (newGrowthLevel === "Level 3" && this.level3PlantCounts[plantType] !== undefined) {
+                    if (newGrowthLevel === GROWTH_LEVELS[3] && this.level3PlantCounts[plantType] !== undefined) {
                         this.level3PlantCounts[plantType]++;
                     }
                 }
@@ -835,6 +835,55 @@ export const PlantDSL = {
             (_cell, grid, row, col) => {
                 const neighbors = grid.getNeighborCells(row, col);
                 return neighbors.every(n => n.plantType === "None");
+            }
+        ]
+    },
+    "النوع أ": {
+        growthRules: [
+            (cell) => cell.sun > 3,
+            (cell) => cell.water > 8
+        ]
+    },
+    "النوع ب": {
+        growthRules: [
+            (cell) => cell.sun <= 3,
+            (_cell, grid, row, col) => {
+                const neighbors = grid.getNeighborCells(row, col);
+                return neighbors.some(n => n.plantType !== PLANT_TYPES[0]);
+            }
+        ]
+    },
+    "النوع ج": {
+        growthRules: [
+            (cell) => cell.water >= 5 && cell.sun >= 2,
+            (_cell, grid, row, col) => {
+                const neighbors = grid.getNeighborCells(row, col);
+                return neighbors.every(n => n.plantType === PLANT_TYPES[0]);
+            }
+        ]
+    },
+    // repeat growth rules for the chinese localization
+    "物种A": {
+        growthRules: [
+            (cell) => cell.sun > 3,
+            (cell) => cell.water > 8
+        ]
+    },
+    "物种B": {
+        growthRules: [
+            (cell) => cell.sun <= 3,
+            (_cell, grid, row, col) => {
+                const neighbors = grid.getNeighborCells(row, col);
+                return neighbors.some(n => n.plantType !== PLANT_TYPES[0]);
+            }
+        ]
+    },
+    "物种C": {
+        growthRules: [
+            (cell) => cell.water >= 5 && cell.sun >= 2,
+            (_cell, grid, row, col) => {
+                const neighbors = grid.getNeighborCells(row, col);
+                return neighbors.every(n => n.plantType === PLANT_TYPES[0]);
             }
         ]
     }
