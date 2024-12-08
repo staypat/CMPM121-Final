@@ -19,13 +19,13 @@ const characterPosition = { row: 0, col: 0 };
 let cursors;
 const MOVE_COOLDOWN = 250;
 let lastMoveTime = 0;
-const nextTurnButton = document.createElement("button");;
 let turnCounter = 0;
 let popupText = null;
 let activeCell = null;
 const undoStack = [];
 const redoStack = [];
 let currentLanguage = 'en'; // Default language is English
+let buttonsCreated = false;
 
 import * as yaml from 'js-yaml';
 export class Play extends Phaser.Scene {
@@ -81,11 +81,6 @@ export class Play extends Phaser.Scene {
 
         // Refresh popup text (recreates the popup with updated language)
         this.updatePopup();
-
-        // If the player has won, translate the win text
-        if (this.hasWon && winText) {
-            winText.setText(this.localization.winMessage || "You Win!");
-        }
     
         // Popup text
         if (popupText && activeCell) {
@@ -176,7 +171,10 @@ export class Play extends Phaser.Scene {
         // Adjust the Next Turn button to sit higher than before
         const centerY = gridHeight + (blackHeight / 2) - 30; // Move the button 50px up
 
-        this.addSaveLoadUI();
+        if (buttonsCreated == false) {
+            this.addSaveLoadUI();
+            buttonsCreated = true;
+        }
 
         // Timer for autosave
         this.time.addEvent({
@@ -291,19 +289,24 @@ export class Play extends Phaser.Scene {
     handleWin() {
         this.hasWon = true;
         localStorage.removeItem("AutoSave"); // Clear auto-save on win
-        const centerX = this.scale.width / 2;
-        const centerY = this.scale.height / 2;
-        this.add.text(centerX, centerY, "You Win!", {
-            font: "32px Arial",
-            color: "#ffffff",
-            backgroundColor: "#000000",
-            padding: { x: 20, y: 20 },
-        }).setOrigin(0.5, 0.5);
-
-        nextTurnButton.innerText = this.localization.restart || "Restart";
-        nextTurnButton.onclick = () => {
-            this.scene.restart();
+    
+        // Create a div for the win message
+        const winMessage = document.createElement("div");
+        winMessage.innerText = this.localization.winMessage || "You Win!"; // Localized win message
+        winMessage.className = 'win-screen';
+    
+        // Create a Restart button
+        const restartButton = document.createElement("button");
+        restartButton.innerText = this.localization.restart || "Restart"; // Localize Restart button text
+        restartButton.className = 'restart-button'; // Class for styling
+        restartButton.onclick = () => {
+            this.scene.restart(); // Restart the game when clicked
+            winMessage.remove(); // Remove message after action
         };
+    
+        // Append the message and button to the body or specific container
+        document.body.appendChild(winMessage);
+        winMessage.appendChild(restartButton);
     }
 
     saveGame(slotName) {
@@ -447,6 +450,7 @@ export class Play extends Phaser.Scene {
         buttonContainer.appendChild(undoButton);
         
         // Add Next Turn Button
+        const nextTurnButton = document.createElement("button");
         nextTurnButton.innerText = "Next Turn";
         nextTurnButton.className = 'next-turn-button';
         nextTurnButton.onclick = () => this.nextTurn();
