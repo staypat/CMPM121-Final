@@ -43,6 +43,7 @@ export class Play extends Phaser.Scene {
             PLANT_TYPES = translations.plantTypes || PLANT_TYPES;
             GROWTH_LEVELS = translations.growthLevels || GROWTH_LEVELS;
             console.log(`Language switched to: ${languageCode}`);
+            currentLanguage = languageCode; // Update the current language
         } else {
             console.error(`Failed to load language: ${languageCode}`);
         }
@@ -931,6 +932,31 @@ export const PlantDSL = {
         ]
     },
     "物种C": {
+        growthRules: [
+            (cell) => cell.water >= 5 && cell.sun >= 2,
+            (_cell, grid, row, col) => {
+                const neighbors = grid.getNeighborCells(row, col);
+                return neighbors.every(n => n.plantType === PLANT_TYPES[0]);
+            }
+        ]
+    },
+    // Repeat for spanish
+    "Especie A": {
+        growthRules: [
+            (cell) => cell.sun > 3,
+            (cell) => cell.water > 8
+        ]
+    },
+    "Especie B": {
+        growthRules: [
+            (cell) => cell.sun <= 3,
+            (_cell, grid, row, col) => {
+                const neighbors = grid.getNeighborCells(row, col);
+                return neighbors.some(n => n.plantType !== PLANT_TYPES[0]);
+            }
+        ]
+    },
+    "Especie C": {
         growthRules: [
             (cell) => cell.water >= 5 && cell.sun >= 2,
             (_cell, grid, row, col) => {

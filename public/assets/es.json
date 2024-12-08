@@ -12,5 +12,7 @@
       "plant": "Planta",
       "growth": "Crecimiento"
   },
-  "restart": "Reanudar"
+  "restart": "Reanudar",
+  "plantTypes": ["Nada", "Especie A", "Especie B", "Especie C"],
+  "growthLevels": ["N/A", "Nivel 1", "Nivel 2", "Nivel 3"]
 }
