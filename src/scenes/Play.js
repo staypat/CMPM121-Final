@@ -43,7 +43,6 @@ export class Play extends Phaser.Scene {
             PLANT_TYPES = translations.plantTypes || PLANT_TYPES;
             GROWTH_LEVELS = translations.growthLevels || GROWTH_LEVELS;
             console.log(`Language switched to: ${languageCode}`);
-            currentLanguage = languageCode; // Update the current language
         } else {
             console.error(`Failed to load language: ${languageCode}`);
         }
