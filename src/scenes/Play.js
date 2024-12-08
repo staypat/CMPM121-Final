@@ -1,5 +1,5 @@
 // Game parameters
-const NUM_ROWS = 12;
+const NUM_ROWS = 15;
 const NUM_COLS = 20;
 const CELL_SIZE = 40;
 let PLANT_TYPES = ["None", "Species A", "Species B", "Species C"];
@@ -19,15 +19,13 @@ const characterPosition = { row: 0, col: 0 };
 let cursors;
 const MOVE_COOLDOWN = 250;
 let lastMoveTime = 0;
-let _nextTurnButton;
+const nextTurnButton = document.createElement("button");;
 let turnCounter = 0;
 let popupText = null;
 let activeCell = null;
 const undoStack = [];
 const redoStack = [];
 let currentLanguage = 'en'; // Default language is English
-
-let undoButton, redoButton;
 
 import * as yaml from 'js-yaml';
 export class Play extends Phaser.Scene {
@@ -54,9 +52,26 @@ export class Play extends Phaser.Scene {
 
     // Add the refreshTexts method (next section) here
     refreshTexts() {
-        if (_nextTurnButton) _nextTurnButton.setText(this.localization.nextTurn || "Next Turn");
-        if (undoButton) undoButton.setText(this.localization.undo || "Undo");
-        if (redoButton) redoButton.setText(this.localization.redo || "Redo");
+        const nextTurnButton = document.querySelector('.next-turn-button');
+        nextTurnButton.innerText = this.localization.nextTurn || "Next Turn";
+        const undoButton = document.querySelector('.undo-button');
+        undoButton.innerText = this.localization.undo || "Undo";
+        const redoButton = document.querySelector('.redo-button');
+        redoButton.innerText = this.localization.redo || "Redo";
+        const saveSlot1Button = document.querySelector('.save-button1');
+        saveSlot1Button.innerText = this.localization.saveSlot.replace("{slot}", 1) || "Save Slot 1";
+        const saveSlot2Button = document.querySelector('.save-button2');
+        saveSlot2Button.innerText = this.localization.saveSlot.replace("{slot}", 2) || "Save Slot 2";
+        const saveSlot3Button = document.querySelector('.save-button3');
+        saveSlot3Button.innerText = this.localization.saveSlot.replace("{slot}", 3) || "Save Slot 3";
+        const loadSlot1Button = document.querySelector('.load-button1');
+        loadSlot1Button.innerText = this.localization.loadSlot.replace("{slot}", 1) || "Save Slot 1";
+        const loadSlot2Button = document.querySelector('.load-button2');
+        loadSlot2Button.innerText = this.localization.loadSlot.replace("{slot}", 2) || "Save Slot 2";
+        const loadSlot3Button = document.querySelector('.load-button3');
+        loadSlot3Button.innerText = this.localization.loadSlot.replace("{slot}", 3) || "Save Slot 3";
+        const autoSaveButton = document.querySelector(".auto-save-button");
+        autoSaveButton.innerText = this.localization.autoSaveMessage || "Continue from last auto-save?"; // Set button text
     
         // Update Save/Load buttons
         this.refreshSaveLoadButtonsText();
@@ -157,99 +172,11 @@ export class Play extends Phaser.Scene {
 
         // Push initial state to the undo stack
         this.grid.pushUndoStack();
-    
+
         // Adjust the Next Turn button to sit higher than before
         const centerY = gridHeight + (blackHeight / 2) - 30; // Move the button 50px up
-        
-    
-        _nextTurnButton = this.add.text(centerX, centerY, "Next Turn", {
-            font: "20px Arial",
-            backgroundColor: "#0000ff",
-            padding: { x: 10, y: 10 },
-        })
-            .setOrigin(0.5, 0.5)
-            .setInteractive()
-            .on("pointerdown", () => this.nextTurn());
 
-        // Add undo button
-        undoButton = this.add.text(centerX - 100, centerY, "Undo", {
-            font: "20px Arial",
-            backgroundColor: "#ff0000",
-            padding: { x: 10, y: 10 },
-        })
-            .setOrigin(0.5, 0.5)
-            .setInteractive()
-            .on("pointerdown", () => {
-                if (undoStack.length != 0) {
-                    const undoState = undoStack.pop();
-                    redoStack.push({
-                        gridData: new Uint8Array(this.grid.getSerializedData().gridData),
-                        characterPosition: { row: characterPosition.row, col: characterPosition.col },
-                    });
-                    if (undoState) {
-                        this.grid.loadSerializedData({
-                            gridData: Array.from(undoState?.gridData || []),
-                            level3PlantCounts: this.grid.getLevel3PlantCounts()
-                        });
-                    }
-                    if (undoState) {
-                        characterPosition.row = undoState.characterPosition.row;
-                        characterPosition.col = undoState.characterPosition.col;
-                    }
-                    character.x = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
-                    character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
-                }
-            });
-
-        // Add redo button
-        redoButton = this.add.text(centerX + 100, centerY, "Redo", {
-            font: "20px Arial",
-            backgroundColor: "#00ff00",
-            padding: { x: 10, y: 10 },
-        })
-            .setOrigin(0.5, 0.5)
-            .setInteractive()
-            .on("pointerdown", () => {
-                if (redoStack.length != 0) {
-                    undoStack.push({
-                        gridData: new Uint8Array(this.grid.getSerializedData().gridData),
-                        characterPosition: { row: characterPosition.row, col: characterPosition.col },
-                    });
-                    const redoState = redoStack.pop();
-                    if (redoState) {
-                        this.grid.loadSerializedData({
-                            gridData: Array.from(redoState?.gridData || []),
-                            level3PlantCounts: this.grid.getLevel3PlantCounts()
-                        });
-                    }
-                    if (redoState) {
-                        characterPosition.row = redoState.characterPosition.row;
-                        characterPosition.col = redoState.characterPosition.col;
-                    }
-                    character.x = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
-                    character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
-                }
-            });
-    
         this.addSaveLoadUI();
-        
-        // Check if an auto-save exists, then create the message
-        if (localStorage.getItem("AutoSave")) {
-            this.autoSaveMessage = this.add.text(centerX, centerY - 50, "", {
-                font: "20px Arial",
-                backgroundColor: "#0000ff",
-                padding: { x: 10, y: 10 },
-            })
-                .setOrigin(0.5, 0.5)
-                .setInteractive()
-                .on("pointerdown", () => {
-                    this.loadAutoSave();
-                    this.autoSaveMessage.destroy(); // Remove the message after continuing
-                });
-
-            // Refresh the auto-save message to set the correct language immediately
-            this.refreshAutoSaveMessage();
-        }
 
         // Timer for autosave
         this.time.addEvent({
@@ -328,10 +255,13 @@ export class Play extends Phaser.Scene {
         if (activeCell !== currentCell) {
             activeCell = currentCell; // Update the tracked cell
     
-            // Destroy the existing popup text, if any
-            if (popupText) popupText.destroy();
+            // Use the stats div to display the popup text
+            const statsDiv = document.getElementById('stats'); // Select the stats div
     
-            // Use localized popup text for each field
+            // Clear existing text
+            statsDiv.innerHTML = ''; // Clear the existing content
+    
+            // Generate the translated popup text
             const popupLocalization = this.localization?.popup || {
                 sun: "Sun",
                 water: "Water",
@@ -339,20 +269,16 @@ export class Play extends Phaser.Scene {
                 growth: "Growth",
             };
     
-            // Generate the translated popup text
-            popupText = this.add.text(
-                character.x + CELL_SIZE / 2, // Position right of the character
-                character.y - CELL_SIZE / 2, // Position above the character
-                `${popupLocalization.sun}: ${currentCell.sun}, ` +
+            // Create a new div for the popup text
+            const popupTextElement = document.createElement("div");
+            popupTextElement.style.color = "#ffffff"; // Set text color, adjust as necessary
+            popupTextElement.innerText = `${popupLocalization.sun}: ${currentCell.sun}, ` +
                 `${popupLocalization.water}: ${currentCell.water}\n` +
                 `${popupLocalization.plant}: ${currentCell.plantType}, ` +
-                `${popupLocalization.growth}: ${currentCell.growthLevel}`,
-                {
-                    font: "16px Arial",
-                    color: "#ffffff",
-                    backgroundColor: "#000000",
-                }
-            );
+                `${popupLocalization.growth}: ${currentCell.growthLevel}`;
+    
+            // Append the newly created popup text element to the stats div
+            statsDiv.appendChild(popupTextElement);
         }
     }
 
@@ -374,7 +300,10 @@ export class Play extends Phaser.Scene {
             padding: { x: 20, y: 20 },
         }).setOrigin(0.5, 0.5);
 
-        _nextTurnButton.setText("Restart").on("pointerdown", () => this.scene.restart());
+        nextTurnButton.innerText = this.localization.restart || "Restart";
+        nextTurnButton.onclick = () => {
+            this.scene.restart();
+        };
     }
 
     saveGame(slotName) {
@@ -442,90 +371,131 @@ export class Play extends Phaser.Scene {
     }
 
     addSaveLoadUI() {
-        const buttonWidth = 120; // Width of each button
-        const spacing = 10; // Space between buttons
-        const yPosition = this.scale.height - 50; // Align horizontally with "Next Turn" button
-        const centerX = this.scale.width / 2; // Center point for the "Next Turn" button
+        // Get the savesButtonContainer
+        const buttonContainer = document.getElementById('savesButtonContainer');
     
         // Track Save/Load buttons for translation
         this.saveLoadButtons = [];
     
-        // Calculate starting x position so all buttons fit to the left of "Next Turn"
-        let xOffset = centerX - (3 * (buttonWidth + spacing)) - spacing; // Place Save/Load buttons leftwards of center
-    
         // Save Slot 1 Button
-        const saveSlot1Button = this.add.text(xOffset, yPosition, "", {
-            font: "16px Arial",
-            backgroundColor: "#008000",
-            padding: { x: 10, y: 10 },
-        })
-            .setInteractive()
-            .on("pointerdown", () => this.saveGame("SaveSlot1"));
-    
-        this.saveLoadButtons.push({ type: "save", slot: 1, button: saveSlot1Button });
+        const saveSlot1Button = document.createElement("button");
+        saveSlot1Button.innerText = "Save Slot 1";
+        saveSlot1Button.className = 'save-button1';
+        saveSlot1Button.onclick = () => this.saveGame("SaveSlot1");
+        buttonContainer.appendChild(saveSlot1Button);
     
         // Load Slot 1 Button
-        xOffset += buttonWidth + spacing; // Move to the right of the previous button
-        const loadSlot1Button = this.add.text(xOffset, yPosition, "", {
-            font: "16px Arial",
-            backgroundColor: "#800000",
-            padding: { x: 10, y: 10 },
-        })
-            .setInteractive()
-            .on("pointerdown", () => this.loadGame("SaveSlot1"));
-    
-        this.saveLoadButtons.push({ type: "load", slot: 1, button: loadSlot1Button });
+        const loadSlot1Button = document.createElement("button");
+        loadSlot1Button.innerText = "Load Slot 1";
+        loadSlot1Button.className = 'load-button1';
+        loadSlot1Button.onclick = () => this.loadGame("SaveSlot1");
+        buttonContainer.appendChild(loadSlot1Button);
     
         // Save Slot 2 Button
-        xOffset += buttonWidth + spacing; // Move to the right of the previous button
-        const saveSlot2Button = this.add.text(xOffset, yPosition, "", {
-            font: "16px Arial",
-            backgroundColor: "#008000",
-            padding: { x: 10, y: 10 },
-        })
-            .setInteractive()
-            .on("pointerdown", () => this.saveGame("SaveSlot2"));
-    
-        this.saveLoadButtons.push({ type: "save", slot: 2, button: saveSlot2Button });
+        const saveSlot2Button = document.createElement("button");
+        saveSlot2Button.innerText = "Save Slot 2";
+        saveSlot2Button.className = 'save-button2';
+        saveSlot2Button.onclick = () => this.saveGame("SaveSlot2");
+        buttonContainer.appendChild(saveSlot2Button);
     
         // Load Slot 2 Button
-        xOffset += buttonWidth + spacing; // Move to the right of the previous button
-        const loadSlot2Button = this.add.text(xOffset, yPosition, "", {
-            font: "16px Arial",
-            backgroundColor: "#800000",
-            padding: { x: 10, y: 10 },
-        })
-            .setInteractive()
-            .on("pointerdown", () => this.loadGame("SaveSlot2"));
-    
-        this.saveLoadButtons.push({ type: "load", slot: 2, button: loadSlot2Button });
+        const loadSlot2Button = document.createElement("button");
+        loadSlot2Button.innerText = "Load Slot 2";
+        loadSlot2Button.className = 'load-button2';
+        loadSlot2Button.onclick = () => this.loadGame("SaveSlot2");
+        buttonContainer.appendChild(loadSlot2Button);
     
         // Save Slot 3 Button
-        xOffset += buttonWidth + spacing; // Move to the right of the previous button
-        const saveSlot3Button = this.add.text(xOffset, yPosition, "", {
-            font: "16px Arial",
-            backgroundColor: "#008000",
-            padding: { x: 10, y: 10 },
-        })
-            .setInteractive()
-            .on("pointerdown", () => this.saveGame("SaveSlot3"));
-    
-        this.saveLoadButtons.push({ type: "save", slot: 3, button: saveSlot3Button });
+        const saveSlot3Button = document.createElement("button");
+        saveSlot3Button.innerText = "Save Slot 3";
+        saveSlot3Button.className = 'save-button3';
+        saveSlot3Button.onclick = () => this.saveGame("SaveSlot3");
+        buttonContainer.appendChild(saveSlot3Button);
     
         // Load Slot 3 Button
-        xOffset += buttonWidth + spacing; // Move to the right of the previous button
-        const loadSlot3Button = this.add.text(xOffset, yPosition, "", {
-            font: "16px Arial",
-            backgroundColor: "#800000",
-            padding: { x: 10, y: 10 },
-        })
-            .setInteractive()
-            .on("pointerdown", () => this.loadGame("SaveSlot3"));
-    
-        this.saveLoadButtons.push({ type: "load", slot: 3, button: loadSlot3Button });
-    
-        // Refresh Save/Load text in case language changes
+        const loadSlot3Button = document.createElement("button");
+        loadSlot3Button.innerText = "Load Slot 3";
+        loadSlot3Button.className = 'load-button3';
+        loadSlot3Button.onclick = () => this.loadGame("SaveSlot3");
+        buttonContainer.appendChild(loadSlot3Button);
+
+        // Add undo button
+        const undoButton = document.createElement("button");
+        undoButton.innerText = "Undo";
+        undoButton.className = 'undo-button';
+        undoButton.onclick = () => {
+            if (undoStack.length !== 0) {
+                const undoState = undoStack.pop();
+                redoStack.push({
+                    gridData: new Uint8Array(this.grid.getSerializedData().gridData),
+                    characterPosition: { row: characterPosition.row, col: characterPosition.col },
+                });
+                if (undoState) {
+                    this.grid.loadSerializedData({
+                        gridData: Array.from(undoState?.gridData || []),
+                        level3PlantCounts: this.grid.getLevel3PlantCounts()
+                    });
+                }
+                if (undoState) {
+                    characterPosition.row = undoState.characterPosition.row;
+                    characterPosition.col = undoState.characterPosition.col;
+                }
+                character.x = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
+                character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
+            }
+        };
+        buttonContainer.appendChild(undoButton);
+        
+        // Add Next Turn Button
+        nextTurnButton.innerText = "Next Turn";
+        nextTurnButton.className = 'next-turn-button';
+        nextTurnButton.onclick = () => this.nextTurn();
+        buttonContainer.appendChild(nextTurnButton);
+
+        // Add Redo Button
+        const redoButton = document.createElement("button");
+        redoButton.innerText = "Redo";
+        redoButton.className = 'redo-button';
+        redoButton.onclick = () => {
+            if (redoStack.length !== 0) {
+                undoStack.push({
+                    gridData: new Uint8Array(this.grid.getSerializedData().gridData),
+                    characterPosition: { row: characterPosition.row, col: characterPosition.col },
+                });
+                const redoState = redoStack.pop();
+                if (redoState) {
+                    this.grid.loadSerializedData({
+                        gridData: Array.from(redoState?.gridData || []),
+                        level3PlantCounts: this.grid.getLevel3PlantCounts()
+                    });
+                }
+                if (redoState) {
+                    characterPosition.row = redoState.characterPosition.row;
+                    characterPosition.col = redoState.characterPosition.col;
+                }
+                character.x = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
+                character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
+            }
+        };
+        buttonContainer.appendChild(redoButton);
+
+        // You can add more button styles or classes as needed here.
         this.refreshSaveLoadButtonsText();
+
+        // Check if an auto-save exists, then create the message
+        if (localStorage.getItem("AutoSave")) {
+            const autoSaveButton = document.createElement("button");
+            autoSaveButton.innerText = "Continue from last auto-save?"; // Set button text
+            autoSaveButton.className = 'auto-save-button'; // Add styling class for the button
+            
+            // Add click event to load the auto-save
+            autoSaveButton.onclick = () => {
+                this.loadAutoSave(); // Replace with your actual loadAutoSave method
+                autoSaveButton.remove(); // Remove the button after action
+            };
+
+            buttonContainer.appendChild(autoSaveButton);
+        }
     }
 
     refreshSaveLoadButtonsText() {
