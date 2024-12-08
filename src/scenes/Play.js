@@ -665,9 +665,9 @@ class Grid {
                 let textureKey;
                 if (plantType === "None" || growthLevel === "N/A") {
                     textureKey = 'empty'; // No plant
-                } else if (growthLevel === "Level 1") {
+                } else if (growthLevel === this.scene.localization?.growthLevels[1]) {
                     textureKey = 'seedling'; // Any species at Level 1
-                } else if (growthLevel === "Level 2") {
+                } else if (growthLevel === this.scene.localization?.growthLevels[2]) {
                     textureKey = `plant_${plantType.slice(-1).toLowerCase()}_2`; // Specific species for Level 2
                 } else { // Level 3
                     textureKey = `plant_${plantType.slice(-1).toLowerCase()}_3`; // Specific species for Level 3
