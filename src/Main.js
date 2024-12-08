@@ -7,7 +7,20 @@ const config = {
     type: Phaser.AUTO,
     width: 800,
     height: 600,
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    },
     scene: [Play]
 };
 
 const _game = new Phaser.Game(config);
+
+// Handle window resizing
+globalThis.addEventListener('resize', () => {
+    const newWidth = globalThis.innerWidth;
+    const newHeight = globalThis.innerHeight;
+
+    // Resize the Phaser game instance
+    game.scale.resize(newWidth, newHeight);
+});
