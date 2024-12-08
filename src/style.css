@@ -8,6 +8,10 @@ body, html {
     background-color: black;
 }
 
+button {
+    border-radius: 10px;
+}
+
 #app {
     display: flex;
     flex-direction: column; /* Stacks #gameWrapper and #saves vertically */
@@ -44,6 +48,17 @@ body, html {
     width: 300px;
     height: 600px; /* Adjust as needed */
     background-color: #10131b; /* Example background */
+    display: flex; /* Enable flexbox layout */
+    flex-direction: column; /* Stack children vertically */
+    align-items: center; /* Center items horizontally, adjust as needed */
+    gap: 10px;
+    padding: 10px 0; /* Add space above and below the buttons */
+}
+
+#savesButtonContainer button {
+    flex: 1; /* Make all buttons grow equally */
+    width: 90%;
+    max-height: calc((600px - 80px) / 7);
 }
 
 #stats {
@@ -54,10 +69,52 @@ body, html {
 }
 
 #actions {
-    width: 300px; /* Matches the width of the top section */
-    height: 100px; /* Adjust as needed */
-    background-color: #10131b; /* Example background */
-    border: 2px solid white;
+    width: 300px;  /* Fixed width */
+    height: 100px; /* Fixed height */
+    display: flex; /* Enable flexbox for this container */
+    border: 2px solid white; /* Optional: for visual reference */
+}
+
+#next-turn {
+    flex: 1; /* Take up half of the container */
+    display: flex; /* Enable flex for centering the button */
+}
+
+.next-turn-button {
+    width: 100%; /* Full width of its container */
+    height: 90%; /* Adjust height as needed */
+    background-color: #264b96;
+    color: white; /* Text color */
+    border: none; /* Remove border */
+    margin: 5px; /* Add margin on the right side */
+    box-sizing: border-box; /* Ensure padding is included in height/width */
+}
+
+#undo-redo {
+    display: flex; /* Enable flexbox for undo/redow buttons container */
+    flex: 1; /* Take up the remaining space */
+    flex-direction: column; /* Stack buttons vertically */
+}
+
+.redo-button {
+    flex: 1; /* Each button takes up equal space within the container */
+    margin-top: 5px; /* Padding inside buttons */
+    margin-right: 5px;
+    height: 100%; /* Fill the height of the parent container */
+    border: none; /* Remove border */
+    background-color: #006f3c; /* Green for redo */
+    color: white; /* Text color */
+}
+
+.undo-button {
+    flex: 1; /* Each button takes up equal space within the container */
+    margin-top: 5px; /* Padding inside buttons */
+    margin-right: 5px;
+    margin-bottom: 5px;
+    height: 100%; /* Fill the height of the parent container */
+    border: none; /* Remove border */
+    background-color: #bf212f; /* Red for undo */
+    color: white; /* Text color */
 }
 
 .win-container {
@@ -76,5 +133,16 @@ body, html {
 
 .win-container button {
     margin-top: 10px;
+}
+
+.popup-container {
+    display: grid; /* Use grid layout */
+    grid-template-columns: 1fr 1fr; /* Two columns */
+    grid-template-rows: 1fr 1fr; /* Two rows */
+    color: #ffffff; /* Set text color */
+    width: 100%; /* Full width of the container */
+    height: 100%; /* Full height of the container */
+    box-sizing: border-box; /* Include padding in total width/height */
+    padding: 10px;
 }
   

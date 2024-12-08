@@ -83,11 +83,11 @@ export class Play extends Phaser.Scene {
         this.updatePopup();
     
         // Popup text
-        if (popupText && activeCell) {
-            popupText.setText(
+        const popupTextElement = document.getElementById('stats'); // Select the popup text element
+        if (popupTextElement && activeCell) {
+            popupTextElement.innerText = 
                 `${this.localization.popup?.sun || "Sun"}: ${activeCell.sun}, ${this.localization.popup?.water || "Water"}: ${activeCell.water}\n` +
-                `${this.localization.popup?.plant || "Plant"}: ${activeCell.plantType}, ${this.localization.popup?.growth || "Growth"}: ${activeCell.growthLevel}`
-            );
+                `${this.localization.popup?.plant || "Plant"}: ${activeCell.plantType}, ${this.localization.popup?.growth || "Growth"}: ${activeCell.growthLevel}`;
         }
     }
 
@@ -268,15 +268,28 @@ export class Play extends Phaser.Scene {
             };
     
             // Create a new div for the popup text
-            const popupTextElement = document.createElement("div");
-            popupTextElement.style.color = "#ffffff"; // Set text color, adjust as necessary
-            popupTextElement.innerText = `${popupLocalization.sun}: ${currentCell.sun}, ` +
-                `${popupLocalization.water}: ${currentCell.water}\n` +
-                `${popupLocalization.plant}: ${currentCell.plantType}, ` +
-                `${popupLocalization.growth}: ${currentCell.growthLevel}`;
-    
-            // Append the newly created popup text element to the stats div
-            statsDiv.appendChild(popupTextElement);
+            const popupContainer = document.createElement("div");
+            popupContainer.className = 'popup-container';
+
+            // Create elements for each piece of information
+            const sunText = document.createElement("div");
+            sunText.innerText = `${popupLocalization.sun}: ${currentCell.sun}`;
+            popupContainer.appendChild(sunText); // First element
+
+            const plantText = document.createElement("div");
+            plantText.innerText = `${popupLocalization.plant}: ${currentCell.plantType}`;
+            popupContainer.appendChild(plantText); // Third element
+
+            const waterText = document.createElement("div");
+            waterText.innerText = `${popupLocalization.water}: ${currentCell.water}`;
+            popupContainer.appendChild(waterText); // Second element
+
+            const growthText = document.createElement("div");
+            growthText.innerText = `${popupLocalization.growth}: ${currentCell.growthLevel}`;
+            popupContainer.appendChild(growthText); // Fourth element
+
+            // Finally, append the popupContainer to the appropriate parent element (e.g., stats div)
+            statsDiv.appendChild(popupContainer); // Add the popup container to the stats div
         }
     }
 
@@ -384,7 +397,8 @@ export class Play extends Phaser.Scene {
     addSaveLoadUI() {
         // Get the savesButtonContainer
         const lsbuttonContainer = document.getElementById('savesButtonContainer');
-        const actionsbuttonContainer = document.getElementById('actions');
+        const nextTurnDiv = document.getElementById('next-turn');
+        const undoRedoDiv = document.getElementById('undo-redo');
     
         // Track Save/Load buttons for translation
         this.saveLoadButtons = [];
@@ -431,40 +445,6 @@ export class Play extends Phaser.Scene {
         loadSlot3Button.onclick = () => this.loadGame("SaveSlot3");
         lsbuttonContainer.appendChild(loadSlot3Button);
 
-        // Add undo button
-        const undoButton = document.createElement("button");
-        undoButton.innerText = "Undo";
-        undoButton.className = 'undo-button';
-        undoButton.onclick = () => {
-            if (undoStack.length !== 0) {
-                const undoState = undoStack.pop();
-                redoStack.push({
-                    gridData: new Uint8Array(this.grid.getSerializedData().gridData),
-                    characterPosition: { row: characterPosition.row, col: characterPosition.col },
-                });
-                if (undoState) {
-                    this.grid.loadSerializedData({
-                        gridData: Array.from(undoState?.gridData || []),
-                        level3PlantCounts: this.grid.getLevel3PlantCounts()
-                    });
-                }
-                if (undoState) {
-                    characterPosition.row = undoState.characterPosition.row;
-                    characterPosition.col = undoState.characterPosition.col;
-                }
-                character.x = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
-                character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
-            }
-        };
-        actionsbuttonContainer.appendChild(undoButton);
-        
-        // Add Next Turn Button
-        const nextTurnButton = document.createElement("button");
-        nextTurnButton.innerText = "Next Turn";
-        nextTurnButton.className = 'next-turn-button';
-        nextTurnButton.onclick = () => this.nextTurn();
-        actionsbuttonContainer.appendChild(nextTurnButton);
-
         // Add Redo Button
         const redoButton = document.createElement("button");
         redoButton.innerText = "Redo";
@@ -490,7 +470,41 @@ export class Play extends Phaser.Scene {
                 character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
             }
         };
-        actionsbuttonContainer.appendChild(redoButton);
+        undoRedoDiv.appendChild(redoButton);
+
+        // Add undo button
+        const undoButton = document.createElement("button");
+        undoButton.innerText = "Undo";
+        undoButton.className = 'undo-button';
+        undoButton.onclick = () => {
+            if (undoStack.length !== 0) {
+                const undoState = undoStack.pop();
+                redoStack.push({
+                    gridData: new Uint8Array(this.grid.getSerializedData().gridData),
+                    characterPosition: { row: characterPosition.row, col: characterPosition.col },
+                });
+                if (undoState) {
+                    this.grid.loadSerializedData({
+                        gridData: Array.from(undoState?.gridData || []),
+                        level3PlantCounts: this.grid.getLevel3PlantCounts()
+                    });
+                }
+                if (undoState) {
+                    characterPosition.row = undoState.characterPosition.row;
+                    characterPosition.col = undoState.characterPosition.col;
+                }
+                character.x = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
+                character.y = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
+            }
+        };
+        undoRedoDiv.appendChild(undoButton);
+        
+        // Add Next Turn Button
+        const nextTurnButton = document.createElement("button");
+        nextTurnButton.innerText = "Next Turn";
+        nextTurnButton.className = 'next-turn-button';
+        nextTurnButton.onclick = () => this.nextTurn();
+        nextTurnDiv.appendChild(nextTurnButton);
 
         // You can add more button styles or classes as needed here.
         this.refreshSaveLoadButtonsText();
@@ -610,11 +624,11 @@ class Grid {
                 const growthLevel = GROWTH_LEVELS[growthLevelIndex];
     
                 let textureKey;
-                if (plantType === PLANT_TYPES[0] || growthLevel === GROWTH_LEVELS[0]) {
+                if (plantType === "None" || growthLevel === "N/A") {
                     textureKey = 'empty'; // No plant
-                } else if (growthLevel === GROWTH_LEVELS[1]) {
+                } else if (growthLevel === "Level 1") {
                     textureKey = 'seedling'; // Any species at Level 1
-                } else if (growthLevel === GTOOTH_LEVELS[2]) {
+                } else if (growthLevel === "Level 2") {
                     textureKey = `plant_${plantType.slice(-1).toLowerCase()}_2`; // Specific species for Level 2
                 } else { // Level 3
                     textureKey = `plant_${plantType.slice(-1).toLowerCase()}_3`; // Specific species for Level 3
@@ -691,7 +705,7 @@ class Grid {
                 const plantType = cellData.plantType;
 
                 // Skip empty cells
-                if (plantType === PLANT_TYPES[0]) continue;
+                if (plantType === "None") continue;
 
                 // Retrieve growth rules for this plant type
                 const rules = PlantDSL[plantType]?.growthRules;
@@ -700,7 +714,7 @@ class Grid {
                 // Check if all growth rules are satisfied
                 const satisfiesRules = rules.every(rule => rule(cellData, this, row, col));
 
-                if (satisfiesRules && cellData.growthLevel !== GROWTH_LEVELS[3]) {
+                if (satisfiesRules && cellData.growthLevel !== "Level 3") {
                     // Increment growth level
                     this.gridData[index + 3]++;
     
@@ -712,7 +726,7 @@ class Grid {
                     this.plantVisuals[row][col].setTexture('plants', PLANT_TEXTURE_KEY[textureKey]);
     
                     // Update Level 3 counts if applicable
-                    if (newGrowthLevel === GROWTH_LEVELS[3] && this.level3PlantCounts[plantType] !== undefined) {
+                    if (newGrowthLevel === "Level 3" && this.level3PlantCounts[plantType] !== undefined) {
                         this.level3PlantCounts[plantType]++;
                     }
                 }
@@ -835,55 +849,6 @@ export const PlantDSL = {
             (_cell, grid, row, col) => {
                 const neighbors = grid.getNeighborCells(row, col);
                 return neighbors.every(n => n.plantType === "None");
-            }
-        ]
-    },
-    "النوع أ": {
-        growthRules: [
-            (cell) => cell.sun > 3,
-            (cell) => cell.water > 8
-        ]
-    },
-    "النوع ب": {
-        growthRules: [
-            (cell) => cell.sun <= 3,
-            (_cell, grid, row, col) => {
-                const neighbors = grid.getNeighborCells(row, col);
-                return neighbors.some(n => n.plantType !== PLANT_TYPES[0]);
-            }
-        ]
-    },
-    "النوع ج": {
-        growthRules: [
-            (cell) => cell.water >= 5 && cell.sun >= 2,
-            (_cell, grid, row, col) => {
-                const neighbors = grid.getNeighborCells(row, col);
-                return neighbors.every(n => n.plantType === PLANT_TYPES[0]);
-            }
-        ]
-    },
-    // repeat growth rules for the chinese localization
-    "物种A": {
-        growthRules: [
-            (cell) => cell.sun > 3,
-            (cell) => cell.water > 8
-        ]
-    },
-    "物种B": {
-        growthRules: [
-            (cell) => cell.sun <= 3,
-            (_cell, grid, row, col) => {
-                const neighbors = grid.getNeighborCells(row, col);
-                return neighbors.some(n => n.plantType !== PLANT_TYPES[0]);
-            }
-        ]
-    },
-    "物种C": {
-        growthRules: [
-            (cell) => cell.water >= 5 && cell.sun >= 2,
-            (_cell, grid, row, col) => {
-                const neighbors = grid.getNeighborCells(row, col);
-                return neighbors.every(n => n.plantType === PLANT_TYPES[0]);
             }
         ]
     }
