@@ -1,5 +1,5 @@
 // Game parameters
-const NUM_ROWS = 15;
+const NUM_ROWS = 12;
 const NUM_COLS = 20;
 const CELL_SIZE = 40;
 let PLANT_TYPES = ["None", "Species A", "Species B", "Species C"];
@@ -19,12 +19,11 @@ const characterPosition = { row: 0, col: 0 };
 let cursors;
 const MOVE_COOLDOWN = 250;
 let lastMoveTime = 0;
+let isMoving = false;
 let turnCounter = 0;
-let popupText = null;
 let activeCell = null;
 const undoStack = [];
 const redoStack = [];
-let currentLanguage = 'en'; // Default language is English
 let buttonsCreated = false;
 
 import * as yaml from 'js-yaml';
@@ -57,7 +56,6 @@ export class Play extends Phaser.Scene {
         this.refreshTexts(); // Refresh all text elements based on the new language
     }
 
-    // Add the refreshTexts method (next section) here
     refreshTexts() {
         const nextTurnButton = document.querySelector('.next-turn-button');
         nextTurnButton.innerText = this.localization.nextTurn || "Next Turn";
@@ -117,6 +115,10 @@ export class Play extends Phaser.Scene {
             frameHeight: CELL_SIZE * 10, // Height of each tile
         });
         this.load.image('player', '/CMPM121-Final/assets/astronaut.png');
+        this.load.image('ArrowUp', '/CMPM121-Final/assets/ArrowUp.png');
+        this.load.image('ArrowDown', '/CMPM121-Final/assets/ArrowDown.png');
+        this.load.image('ArrowLeft', '/CMPM121-Final/assets/ArrowLeft.png');
+        this.load.image('ArrowRight', '/CMPM121-Final/assets/ArrowRight.png');
         const url = '/CMPM121-Final/assets/scenarios/level1.yaml';
         console.log('Loading level file from:', url);
         this.load.text('level1', url);
@@ -127,7 +129,7 @@ export class Play extends Phaser.Scene {
         // change language
         const languageSelector = document.getElementById('language');
         languageSelector.addEventListener('change', () => {
-            this.changeLanguage(); // Call the changeLanguage method
+            this.changeLanguage();
         });
 
         // Initialize game state
@@ -138,10 +140,6 @@ export class Play extends Phaser.Scene {
         } else {
             console.error('Keyboard input is not available.');
         }
-        const gridHeight = NUM_ROWS * CELL_SIZE;
-        const totalGameHeight = this.scale.height;
-        const blackHeight = totalGameHeight - gridHeight;
-        const centerX = this.scale.width / 2;
 
         const levelData = this.cache.text.get('level1');
         if (!levelData) {
@@ -164,11 +162,56 @@ export class Play extends Phaser.Scene {
             }
         }
 
+        // Movement Buttons
+        const canvasHeight = this.scale.height; // Total height of the canvas
+        const arrowYBase = canvasHeight - 60; // Position along the black area
+
+        // Padding
+        const padding = 100; // Space between buttons
+        const arrowWidth = 100; // Width of the arrow buttons
+
+        // Calculate x positions based on padding and canvas width
+        const leftX = arrowWidth; // Left arrow position
+        const rightX = leftX + arrowWidth + padding; // Right arrow position
+        const upX = rightX + arrowWidth + padding; // Center up arrow
+        const downX = upX + arrowWidth + padding; // Center down arrow
+
+        // Add arrows and interactions
+        this.add.image(leftX, arrowYBase, 'ArrowLeft').setOrigin(0.5, 0.5).setInteractive()
+        .on('pointerdown', () => {
+            if (characterPosition.col > 0) {
+                this.grid.pushUndoStack();
+                characterPosition.col--;
+                this.moveCharacter();
+            }
+        });
+        this.add.image(rightX, arrowYBase, 'ArrowRight').setOrigin(0.5, 0.5).setInteractive()
+        .on('pointerdown', () => {
+            if (characterPosition.col < NUM_COLS - 1) {
+                this.grid.pushUndoStack();
+                characterPosition.col++;
+                this.moveCharacter();
+            }
+        });
+        this.add.image(upX, arrowYBase, 'ArrowUp').setOrigin(0.5, 0.5).setInteractive()
+        .on('pointerdown', () => {
+            if (characterPosition.row > 0) {
+                this.grid.pushUndoStack();
+                characterPosition.row--;
+                this.moveCharacter();
+            }
+        });
+        this.add.image(downX, arrowYBase, 'ArrowDown').setOrigin(0.5, 0.5).setInteractive()
+        .on('pointerdown', () => {
+            if (characterPosition.row < NUM_ROWS - 1) {
+                this.grid.pushUndoStack();
+                characterPosition.row++;
+                this.moveCharacter();
+            }
+        });
+
         // Push initial state to the undo stack
         this.grid.pushUndoStack();
-
-        // Adjust the Next Turn button to sit higher than before
-        const centerY = gridHeight + (blackHeight / 2) - 30; // Move the button 50px up
 
         if (buttonsCreated == false) {
             this.addSaveLoadUI();
@@ -192,12 +235,9 @@ export class Play extends Phaser.Scene {
 
 
     update(time) {
-        // Only handle input if the cooldown period has expired and no tween is running
-        let isMoving = false;
         if (time >= lastMoveTime + MOVE_COOLDOWN && !isMoving) {
             let hasMoved = false;
 
-    
             // Handle player movement inputs
             if (cursors.up.isDown && characterPosition.row > 0) {
                 this.grid.pushUndoStack();
@@ -220,29 +260,30 @@ export class Play extends Phaser.Scene {
             }
     
             if (hasMoved) {    
-                // Lock movement and set cooldown
-                isMoving = true; // Custom property to lock movement
+                isMoving = true;
+                this.moveCharacter();
                 lastMoveTime = time;
-    
-                // Calculate target visual position
-                const targetX = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
-                const targetY = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
-    
-                // Tween for smooth movement
-                this.tweens.add({
-                    targets: character,
-                    x: targetX,
-                    y: targetY,
-                    duration: MOVE_COOLDOWN, // Match tween duration to your cooldown
-                    ease: 'Linear',
-                    onComplete: () => {
-                        isMoving = false; // Unlock movement after tween completes
-                    }
-                });
             }
         }
-    
         this.updatePopup();
+    }
+    
+    moveCharacter() {
+        // Calculate target visual position
+        const targetX = characterPosition.col * CELL_SIZE + CELL_SIZE / 2;
+        const targetY = characterPosition.row * CELL_SIZE + CELL_SIZE / 2;
+    
+        // Tween for smooth movement
+        this.tweens.add({
+            targets: character,
+            x: targetX,
+            y: targetY,
+            duration: MOVE_COOLDOWN, // Match tween duration to your cooldown
+            ease: 'Linear',
+            onComplete: () => {
+                isMoving = false; // Unlock movement after tween completes
+            }
+        });
     }
 
     updatePopup() {
@@ -505,7 +546,6 @@ export class Play extends Phaser.Scene {
         nextTurnButton.onclick = () => this.nextTurn();
         nextTurnDiv.appendChild(nextTurnButton);
 
-        // You can add more button styles or classes as needed here.
         this.refreshSaveLoadButtonsText();
 
         // Check if an auto-save exists, then create the message
@@ -516,7 +556,7 @@ export class Play extends Phaser.Scene {
             
             // Add click event to load the auto-save
             autoSaveButton.onclick = () => {
-                this.loadAutoSave(); // Replace with your actual loadAutoSave method
+                this.loadAutoSave();
                 autoSaveButton.remove(); // Remove the button after action
             };
 
@@ -875,7 +915,6 @@ export const PlantDSL = {
             }
         ]
     },
-    // repeat growth rules for the chinese localization
     "物种A": {
         growthRules: [
             (cell) => cell.sun > 3,

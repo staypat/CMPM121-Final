@@ -1,6 +1,6 @@
 # Scenario: Forest Adventure
 StartingConditions:
-  PlayerPosition: [6, 10]
+  PlayerPosition: [5, 9]
   InitialResources:
     Sun: 5
     Water: 10
