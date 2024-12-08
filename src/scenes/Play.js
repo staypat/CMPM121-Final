@@ -182,6 +182,7 @@ export class Play extends Phaser.Scene {
             if (characterPosition.col > 0) {
                 this.grid.pushUndoStack();
                 characterPosition.col--;
+                character.flipX = true;
                 this.moveCharacter();
             }
         });
@@ -190,6 +191,7 @@ export class Play extends Phaser.Scene {
             if (characterPosition.col < NUM_COLS - 1) {
                 this.grid.pushUndoStack();
                 characterPosition.col++;
+                character.flipX = false;
                 this.moveCharacter();
             }
         });
