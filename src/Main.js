@@ -14,7 +14,7 @@ const config = {
     scene: [Play]
 };
 
-const _game = new Phaser.Game(config);
+const game = new Phaser.Game(config);
 
 // Handle window resizing
 globalThis.addEventListener('resize', () => {
