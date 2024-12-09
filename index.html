@@ -5,13 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="/manifest.json" />
     <title>Space Plants</title>
+    <style>
+        /* Main container for the entire app */
+        #app {
+            display: flex; /* Use flex layout */
+            flex-direction: column; /* Stack elements vertically */
+            width: 100%; /* Full width */
+        }
+
+        #instructions {
+            width: 100%; /* Full width to match the available space */
+            padding: 20px; /* Padding for inner spacing */
+            background-color: white; /* White background for visibility */
+            border: 1px solid #ccc; /* Light border */
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow for a 3D effect */
+            margin-bottom: 20px; /* Space below the instructions box */
+            box-sizing: border-box; /* Ensure padding and border are included in the width */
+        }
+
+        #gameWrapper {
+            flex: 1; /* Allow this section to take remaining space */
+            display: flex; /* Use flex layout for game and other elements */
+        }
+        
+        #buttonsWrapper {
+            margin-top: 20px; /* Adds margin to separate from the game content */
+        }
+    </style>
 </head>
 <body>
     <script type="module" src ="./lib/phaser.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.0.0/js-yaml.min.js"></script>
     <script type="module" src ="./src/scenes/Play.js"></script>
     <script type="module" src ="./src/Main.js"></script>
+    
     <div id="app">
+        <!-- Instructions Box -->
+        <div id="instructions">
+            <h2>Instructions</h2>
+            <ul>
+                <li>Arrow keys to move</li>
+                <li>Left click to plant a seed on an empty tile</li>
+                <li>Left click to harvest a plant after it's grown</li>
+                <li>Collect 5 of each species plant at level 3 to win</li>
+            </ul>
+            <h2>Growth Conditions</h2>
+            <ul>
+                <li>Species A grows if Sun > 3 and Water > 8</li>
+                <li>Species B grows if Sun ≤ 3, or has a neighboring plant</li>
+                <li>Species C grows if Water ≥ 5, Sun ≥ 2, and has no neighboring plants</li>
+            </ul>
+        </div>
+        
         <div id="gameWrapper">
             <div id="gameView">
                 <div id="winContainer"></div>
@@ -27,6 +72,7 @@
                 </div>
             </div>
         </div>
+        
         <div id="buttonsWrapper">
             <div id="stats"></div>
             <div id="actions">
