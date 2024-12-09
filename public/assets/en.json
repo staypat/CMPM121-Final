@@ -6,6 +6,17 @@
   "saveSlot": "Save Slot {slot}",
   "loadSlot": "Load Slot {slot}",
   "autoSaveMessage": "Continue from last auto-save?",
+  "instructions": [
+    "Arrow keys to move",
+    "Left click to plant a seed on an empty tile",
+    "Left click to harvest a plant after it's grown",
+    "Collect 5 of each species plant at level 3 to win"
+  ],
+  "growthConditions": [
+    "Species A grows if Sun > 3 and Water > 8",
+    "Species B grows if Sun ≤ 3, or has a neighboring plant",
+    "Species C grows if Water ≥ 5, Sun ≥ 2, and has no neighboring plants"
+  ],
   "popup": {
       "sun": "Sun",
       "water": "Water",
