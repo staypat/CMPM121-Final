@@ -6,17 +6,25 @@
   "saveSlot": "Guardar ranura {slot}",
   "loadSlot": "Cargar ranura {slot}",
   "autoSaveMessage": "¿Continuar desde el guardado automático?",
-  "instructions": [
-    "Teclas de flecha para moverte",
-    "Clic izquierdo para plantar una semilla en un tile vacío",
-    "Clic izquierdo para cosechar una planta después de que haya crecido",
-    "Colecciona 5 plantas de cada especie a nivel 3 para ganar"
-  ],
-  "growthConditions": [
-    "La Especie A crece si el Sol > 3 y el Agua > 8",
-    "La Especie B crece si el Sol ≤ 3, o tiene una planta vecina",
-    "La Especie C crece si el Agua ≥ 5, Sol ≥ 2 y no tiene plantas vecinas"
-  ],
+
+  "instructions": {
+    "title": "Instrucciones",
+    "list": [
+      "Teclas de flecha para moverte",
+      "Clic izquierdo para plantar una semilla en un tile vacío",
+      "Clic izquierdo para cosechar una planta después de que haya crecido",
+      "Colecciona 5 plantas de cada especie a nivel 3 para ganar"
+    ]
+  },
+  "growthConditions": {
+    "title": "Condiciones de crecimiento",
+    "list": [
+      "La Especie A crece si el Sol > 3 y el Agua > 8",
+      "La Especie B crece si el Sol ≤ 3, o tiene una planta vecina",
+      "La Especie C crece si el Agua ≥ 5, Sol ≥ 2 y no tiene plantas vecinas"
+    ]
+  },
+
   "popup": {
       "sun": "Sol",
       "water": "Agua",

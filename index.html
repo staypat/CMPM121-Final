@@ -23,22 +23,32 @@
             box-sizing: border-box; /* Ensure padding and border are included in the width */
         }
 
+        #growth-conditions {
+            width: 100%; /* Full width for growth conditions */
+            padding: 20px; /* Padding like the instructions */
+            background-color: white; /* Consistent background */
+            border: 1px solid #ccc; /* Light border */
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+            margin-bottom: 20px; /* Space below the growth conditions */
+            box-sizing: border-box; /* Consistent sizing */
+        }
+
         #gameWrapper {
             flex: 1; /* Allow this section to take remaining space */
             display: flex; /* Use flex layout for game and other elements */
         }
-        
+
         #buttonsWrapper {
             margin-top: 20px; /* Adds margin to separate from the game content */
         }
     </style>
 </head>
 <body>
-    <script type="module" src ="./lib/phaser.js"></script>
+    <script type="module" src="./lib/phaser.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.0.0/js-yaml.min.js"></script>
-    <script type="module" src ="./src/scenes/Play.js"></script>
-    <script type="module" src ="./src/Main.js"></script>
-    
+    <script type="module" src="./src/scenes/Play.js"></script>
+    <script type="module" src="./src/Main.js"></script>
+
     <div id="app">
         <!-- Instructions Box -->
         <div id="instructions">
@@ -49,6 +59,10 @@
                 <li>Left click to harvest a plant after it's grown</li>
                 <li>Collect 5 of each species plant at level 3 to win</li>
             </ul>
+        </div>
+
+        <!-- Growth Conditions Box -->
+        <div id="growth-conditions">
             <h2>Growth Conditions</h2>
             <ul>
                 <li>Species A grows if Sun > 3 and Water > 8</li>
@@ -56,7 +70,7 @@
                 <li>Species C grows if Water ≥ 5, Sun ≥ 2, and has no neighboring plants</li>
             </ul>
         </div>
-        
+
         <div id="gameWrapper">
             <div id="gameView">
                 <div id="winContainer"></div>
@@ -72,7 +86,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div id="buttonsWrapper">
             <div id="stats"></div>
             <div id="actions">

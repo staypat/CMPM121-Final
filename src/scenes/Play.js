@@ -35,6 +35,35 @@ export class Play extends Phaser.Scene {
         super("Play");
     }
 
+    updateInstructions() {
+        const instructionsElement = document.getElementById('instructions');
+        const growthConditionsElement = document.getElementById('growth-conditions');
+    
+        // Update Instructions
+        if (this.localization.instructions) {
+            instructionsElement.innerHTML = `
+                <h2>${this.localization.instructions.title}</h2>
+                <ul>
+                    ${this.localization.instructions.list.map(item => `<li>${item}</li>`).join('')}
+                </ul>
+            `;
+        } else {
+            instructionsElement.innerHTML = `<h2>Instructions</h2><p>No instructions available.</p>`;
+        }
+    
+        // Update Growth Conditions
+        if (this.localization.growthConditions) {
+            growthConditionsElement.innerHTML = `
+                <h2>${this.localization.growthConditions.title}</h2>
+                <ul>
+                    ${this.localization.growthConditions.list.map(condition => `<li>${condition}</li>`).join('')}
+                </ul>
+            `;
+        } else {
+            growthConditionsElement.innerHTML = `<h2>Growth Conditions</h2><p>No growth conditions available.</p>`;
+        }
+    }
+
     setLanguage(languageCode) {
         const translations = this.cache.json.get(languageCode);
         if (translations) {
@@ -129,7 +158,10 @@ export class Play extends Phaser.Scene {
         // change language
         const languageSelector = document.getElementById('language');
         languageSelector.addEventListener('change', () => {
-            this.changeLanguage();
+            // this.changeLanguage();
+            const selectedLanguage = languageSelector.value; // Get selected value
+            this.setLanguage(selectedLanguage); // Set the new language
+            this.updateInstructions(); // Call method to update instructions
         });
 
         // Initialize game state
